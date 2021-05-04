@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowFullEC2AndVPCAccess
+                Effect: Allow
+                Action: "ec2:*"
+                Resource: "*"
+
+  AccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref User
+
+Outputs:
+  UserArn:
+    Value: !GetAtt User.Arn
+  AccessKeyId:
+    Value: !Ref AccessKey
+  SecretAccessKey:
+    Value: !GetAtt AccessKey.SecretAccessKey

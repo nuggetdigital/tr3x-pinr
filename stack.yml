@@ -1,0 +1,260 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  # SnapshotId:
+  #   Description: EBS snapshot id on which to base the volume
+  #   Type: String
+
+  # 4now default
+  # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
+  InstanceImage:
+    Description: Amazon machine image for the EC2 instance
+    Type: String
+    Default: ami-0fa37863afb290840
+
+  SSHPublicKeyName:
+    Description: EC2 SSH public key name that is available within EC2
+    Type: String
+    Default: id_rsa_ipfs_pinr.pub
+
+  EC2Username:
+    Description: EC2 username
+    Type: String
+    Default: ubuntu
+
+  IpfsBinaryGzipURL:
+    Description: Github release URL serving a gzipped prebuilt moonbeam binary
+    Type: String
+    Default: https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
+
+  VolumeDataDir:
+    Description: Data dir path on the EBS volume
+    Type: String
+    Default: /data/ipfs
+
+  Environment:
+    Description: Application environment
+    Type: String
+    AllowedValues:
+      - test
+      - prod
+    Default: test
+
+  VolumeSizeGiB:
+    Description: Size of the EBS volume in GiB
+    Type: Number
+    Default: 50
+
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.micro
+
+  InstanceTenancy:
+    Description: EC2 instance tenancy type
+    Type: String
+    Default: default
+    AllowedValues:
+      - default
+      - dedicated
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      # NOTE: slicable into 6 subnets
+      # 172.26.0.0/19
+      # 172.26.32.0/19
+      # 172.26.64.0/19
+      # 172.26.96.0/19
+      # 172.26.128.0/19
+      # 172.26.160.0/19
+      CidrBlock: 172.26.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: !Ref InstanceTenancy
+
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.26.160.0/19
+      AvailabilityZone: !Sub ${AWS::Region}a
+      MapPublicIpOnLaunch: true
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref VPC
+
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTable
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: !Sub ${AWS::StackName}-security-group
+      GroupName: !Sub ${AWS::StackName}-security-group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-ssh
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-swarm
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 4001
+          ToPort: 4001
+
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-gateway
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-http
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-https
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+
+      SecurityGroupEgress:
+        - Description: !Sub ${AWS::StackName}-security-group-egress-all
+          CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !Sub ${AWS::Region}a
+      SubnetId: !Ref Subnet
+      Volumes:
+        - Device: /dev/xvdh # from: ssh into the instance & lsblk
+          VolumeId: !Ref Volume
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+
+  Volume:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Sub ${AWS::Region}a
+      Encrypted: false
+      Iops: 3000
+      MultiAttachEnabled: false
+      Size: !Ref VolumeSizeGiB
+      # SnapshotId: !Ref SnapshotId
+      VolumeType: gp3
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
+      LaunchTemplateData:
+        ImageId: !Ref InstanceImage
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref SSHPublicKeyName
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        UserData: !Base64
+          "Fn::Sub": |
+            #!/bin/bash
+
+            # mount & configure the ebs volume
+            /usr/bin/sudo /usr/sbin/mkfs -t ext4 /dev/xvdh
+
+            /usr/bin/sudo /bin/mkdir /data
+
+            /usr/bin/echo -e \
+              "/dev/xvdh  /data  ext4  defaults,nofail,nobootwait  0  2" \
+            >> /etc/fstab
+
+            /usr/bin/sudo /bin/mount /dev/xvdh /data
+
+            /bin/mkdir -p ${VolumeDataDir}
+
+            # install the ipfs binary
+            /bin/mkdir -p /home/${EC2Username}/bin
+
+            cd /home/${EC2Username}/bin
+
+            /bin/curl -sSf --proto '=https' --tlsv1.2 -sSfL \
+              {IpfsBinaryGzipURL} \
+            | /bin/tar xz \ 
+              --strip-components=1 \
+              --wildcards \
+              --no-anchored \
+              '*go-ipfs/ipfs*'
+
+            /bin/chmod 0755 /home/${EC2Username}/bin/ipfs
+
+            IPFS_PATH=${VolumeDataDir} /home/${EC2Username}/bin/ipfs init -p server
+
+            data_store_max=$((${VolumeSizeGiB} - 1))
+
+            /home/${EC2Username}/bin/ipfs config Datastore.StorageMax $data_store_maxGB
+
+            /home/${EC2Username}/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+
+            /usr/bin/echo -e "
+              [Unit]
+              Description="ipfs daemon"
+              After=network.target
+              StartLimitIntervalSec=0
+              [Service]
+              Type=simple
+              Restart=on-failure
+              RestartSec=10s
+              LimitNOFILE=10240
+              User=${EC2Username}
+              SyslogIdentifier=ipfs
+              SyslogFacility=local7
+              KillSignal=SIGHUP
+              ExecStart=/home/${EC2Username}/bin/ipfs daemon --enable-gc
+              Environment="IPFS_PATH=${VolumeDataDir}"
+              [Install]
+              WantedBy=multi-user.target
+            " \
+            > /etc/systemd/system/ipfs.service
+
+            /usr/bin/sudo /bin/systemctl enable ipfs.service
+
+            /usr/bin/sudo /bin/systemctl start ipfs.service
+
+Outputs:
+  PublicIp:
+    Description: Public IP of the node
+    Value: !GetAtt Instance.PublicIp
+  VolumeId:
+    Description: Id of the EBS volume
+    Value: !Ref Volume
