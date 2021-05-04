@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eE
+
 source ./.env
 
 stack="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"

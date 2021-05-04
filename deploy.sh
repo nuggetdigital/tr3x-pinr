@@ -12,6 +12,8 @@ else
   change_set_type=CREATE
 fi
 
+set -eE
+
 echo "creatin the change set"
 
 aws cloudformation create-change-set \

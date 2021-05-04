@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eE
+
 source ./.env
 
 echo "generating a fresh key pair..."
