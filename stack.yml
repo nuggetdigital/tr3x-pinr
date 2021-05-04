@@ -48,7 +48,7 @@ Parameters:
   InstanceType:
     Description: EC2 instance type
     Type: String
-    Default: t2.micro
+    Default: t2.nano
 
   InstanceTenancy:
     Description: EC2 instance tenancy type
