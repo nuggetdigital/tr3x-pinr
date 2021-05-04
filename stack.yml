@@ -210,7 +210,7 @@ Resources:
 
             /bin/curl -sSf --proto '=https' --tlsv1.2 -sSfL \
               {IpfsBinaryTarballURL} \
-            | /bin/tar xz \ 
+            | /usr/bin/sudo /bin/tar xz \
               --strip-components=1 \
               --wildcards \
               --no-anchored \
