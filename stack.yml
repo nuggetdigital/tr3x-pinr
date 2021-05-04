@@ -23,7 +23,7 @@ Parameters:
     Default: ubuntu
 
   IpfsBinaryGzipURL:
-    Description: Github release URL serving a gzipped prebuilt moonbeam binary
+    Description: Distribution URL serving ipfs binary tarball
     Type: String
     Default: https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
 
