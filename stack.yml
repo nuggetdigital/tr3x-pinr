@@ -208,17 +208,25 @@ Resources:
 
             cd /home/${EC2Username}/bin
 
-            /bin/curl -sSf --proto '=https' --tlsv1.2 -sSfL \
-              {IpfsBinaryTarballURL} \
-            | /usr/bin/sudo /bin/tar xz \
-              --strip-components=1 \
-              --wildcards \
-              --no-anchored \
-              '*go-ipfs/ipfs*'
+            /usr/bin/sudo /usr/bin/wget -q ${IpfsBinaryTarballURL}
+
+            tarball=$(/usr/bin/basename ${IpfsBinaryTarballURL})
+
+            /usr/bin/sudo /usr/bin/tar xf /home/${EC2Username}/bin/$tarball
+
+            /usr/bin/sudo /usr/bin/mv \
+              /home/${EC2Username}/bin/go-ipfs/ipfs \
+              /home/${EC2Username}/bin/ipfs
 
             /bin/chmod 0755 /home/${EC2Username}/bin/ipfs
 
-            IPFS_PATH=${VolumeDataDir} /home/${EC2Username}/bin/ipfs init -p server
+            /usr/bin/sudo /usr/bin/rm -rf \
+              /home/${EC2Username}/bin/go-ipfs \
+              /home/${EC2Username}/bin/$tarball
+
+            export IPFS_PATH=${VolumeDataDir} 
+            
+            /home/${EC2Username}/bin/ipfs init -p server
 
             data_store_max=$((${VolumeSizeGiB} - 1))
 
