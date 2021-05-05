@@ -203,7 +203,11 @@ Resources:
 
             /usr/bin/sudo /bin/mkdir -p ${VolumeDataDir}
 
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername} ${VolumeDataDir}
+            /usr/bin/sudo /usr/bin/chown \
+              --no-dereference \
+              --recursive \
+              ${ServiceUsername}:ubuntu \
+              ${VolumeDataDir}
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
