@@ -239,17 +239,17 @@ Resources:
 
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description="ipfs daemon"
+              Description=\"ipfs daemon\"
               Wants=network-online.target
               After=network-online.target
               [Service]
               User=${ServiceUsername}
-              Environment="IPFS_PATH=${VolumeDataDir}"
+              Environment=\"IPFS_PATH=${VolumeDataDir}\"
               ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
               Restart=on-failure
               RestartSec=1min
-              LimitNOFILE=8192 # 10240
+              LimitNOFILE=8192
               [Install]
               WantedBy=multi-user.target
             " \
