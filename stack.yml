@@ -20,7 +20,7 @@ Parameters:
   ServiceUsername:
     Description: Name for a separate linux user runnin the systemd ipfs service
     Type: String
-    Default: ipfs-pinr-user
+    Default: ubuntu
 
   IpfsBinaryTarballURL:
     Description: Distribution URL serving ipfs binary tarball
@@ -201,14 +201,9 @@ Resources:
 
             /usr/bin/sudo /bin/mount /dev/xvdh /data
 
-            /bin/mkdir -p ${VolumeDataDir}
+            /usr/bin/sudo /bin/mkdir -p ${VolumeDataDir}
 
-            /usr/bin/sudo /usr/sbin/adduser \
-              ${ServiceUsername} \
-              --system \
-              --no-create-home
-
-            /usr/bin/sudo /bin/chown -hR ${ServiceUsername} ${VolumeDataDir}
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername} {VolumeDataDir}
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
@@ -229,9 +224,7 @@ Resources:
 
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
-            # initializin ipfs as ${ServiceUsername}
-            /usr/bin/sudo -u ${ServiceUsername} /usr/bin/bash
-
+            # initializin ipfs
             export IPFS_PATH=${VolumeDataDir}
 
             /usr/local/bin/ipfs init --profile server
@@ -242,7 +235,7 @@ Resources:
 
             /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
-            # TODO: add writable gateway config !
+            /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
 
             exit
 
