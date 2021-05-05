@@ -10,4 +10,4 @@ public_ip="$( \
   jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"PublicIp\") | .OutputValue" <<< "$stack" \
 )"
 
-ssh -i $HOME/.ssh/$SSH_PRIVATE_KEY_NAME $EC2_USERNAME@$public_ip
+ssh -i $HOME/.ssh/$SSH_PRIVATE_KEY_NAME $SSH_USERNAME@$public_ip
