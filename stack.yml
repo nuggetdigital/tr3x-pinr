@@ -203,53 +203,54 @@ Resources:
 
             /bin/mkdir -p ${VolumeDataDir}
 
-            # install the ipfs binary
-            /bin/mkdir -p /home/${EC2Username}/bin
+            /usr/bin/sudo /usr/sbin/adduser \
+              ipfs_service_user \
+              --system \
+              --no-create-home
 
-            cd /home/${EC2Username}/bin
+            /usr/bin/sudo /bin/chown -hR ipfs_service_user ${VolumeDataDir}
+
+            # install the ipfs binary
+            tmp_dir=$(/usr/bin/mktemp -d)
+
+            cd $tmp_dir
 
             /usr/bin/sudo /usr/bin/wget -q ${IpfsBinaryTarballURL}
 
             tarball=$(/usr/bin/basename ${IpfsBinaryTarballURL})
 
-            /usr/bin/sudo /usr/bin/tar xf /home/${EC2Username}/bin/$tarball
+            /usr/bin/sudo /usr/bin/tar xf $tmp_dir/$tarball
 
-            /usr/bin/sudo /usr/bin/mv \
-              /home/${EC2Username}/bin/go-ipfs/ipfs \
-              /home/${EC2Username}/bin/ipfs
+            /usr/bin/sudo /usr/bin/mv $tmp_dir/go-ipfs/ipfs /usr/local/bin/ipfs
 
-            /bin/chmod 0755 /home/${EC2Username}/bin/ipfs
+            /bin/chmod +x /usr/local/bin/ipfs
 
-            /usr/bin/sudo /usr/bin/rm -rf \
-              /home/${EC2Username}/bin/go-ipfs \
-              /home/${EC2Username}/bin/$tarball
+            cd /
 
-            export IPFS_PATH=${VolumeDataDir} 
-            
-            /home/${EC2Username}/bin/ipfs init -p server
+            /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
-            data_store_max=$((${VolumeSizeGiB} - 1))
-
-            /home/${EC2Username}/bin/ipfs config Datastore.StorageMax $data_store_maxGB
-
-            /home/${EC2Username}/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+            # initializin ipfs as the ipfs_service_user
+            /usr/bin/sudo -u ipfs_service_user \
+              "export IPFS_PATH=${VolumeDataDir}; \
+              /usr/local/bin/ipfs init -p server; \
+              data_store_max=$((${VolumeSizeGiB} - 1)); \
+              /usr/local/bin/ipfs config Datastore.StorageMax $data_store_maxGB; \
+              /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080; \
+              "
 
             /usr/bin/echo -e "
               [Unit]
               Description="ipfs daemon"
-              After=network.target
-              StartLimitIntervalSec=0
+              Wants=network-online.target
+              After=network-online.target
               [Service]
+              User=ipfs_service_user
+              Environment="IPFS_PATH=${VolumeDataDir}"
+              ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
               Restart=on-failure
-              RestartSec=10s
-              LimitNOFILE=10240
-              User=${EC2Username}
-              SyslogIdentifier=ipfs
-              SyslogFacility=local7
-              KillSignal=SIGHUP
-              ExecStart=/home/${EC2Username}/bin/ipfs daemon --enable-gc
-              Environment="IPFS_PATH=${VolumeDataDir}"
+              RestartSec=1min
+              LimitNOFILE=8192 # 10240
               [Install]
               WantedBy=multi-user.target
             " \
