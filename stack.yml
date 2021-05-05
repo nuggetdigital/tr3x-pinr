@@ -229,14 +229,22 @@ Resources:
 
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
-            # initializin ipfs as the ${ServiceUsername}
-            /usr/bin/sudo -u ${ServiceUsername} \
-              "export IPFS_PATH=${VolumeDataDir}; \
-              /usr/local/bin/ipfs init -p server; \
-              data_store_max=$((${VolumeSizeGiB} - 1)); \
-              /usr/local/bin/ipfs config Datastore.StorageMax $data_store_maxGB; \
-              /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080; \
-              "
+            # initializin ipfs as ${ServiceUsername}
+            /usr/bin/sudo -u ${ServiceUsername} /usr/bin/bash
+
+            export IPFS_PATH=${VolumeDataDir}
+
+            /usr/local/bin/ipfs init --profile server
+
+            data_store_max=$((${VolumeSizeGiB} - 1))
+
+            /usr/local/bin/ipfs config Datastore.StorageMax $data_store_maxGB
+
+            /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+
+            # TODO: add writable gateway config !
+
+            exit
 
             /usr/bin/echo -e "
               [Unit]
