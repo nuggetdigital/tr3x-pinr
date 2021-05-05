@@ -20,7 +20,7 @@ Parameters:
   ServiceUsername:
     Description: Name for a separate linux user runnin the systemd ipfs service
     Type: String
-    Default: !Sub ${AWS::StackName}-user
+    Default: ipfs-pinr-user
 
   IpfsBinaryTarballURL:
     Description: Distribution URL serving ipfs binary tarball
