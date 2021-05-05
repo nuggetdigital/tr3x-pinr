@@ -201,7 +201,9 @@ Resources:
 
             /usr/bin/sudo /bin/mount /dev/xvdh /data
 
-            /bin/mkdir -p ${VolumeDataDir}
+            /usr/bin/sudo /bin/mkdir -p ${VolumeDataDir}
+
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername} ${VolumeDataDir}
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
@@ -234,8 +236,6 @@ Resources:
             /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
             /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
-
-            exit
 
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
