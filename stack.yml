@@ -17,10 +17,10 @@ Parameters:
     Type: String
     Default: id_rsa_ipfs_pinr.pub
 
-  EC2Username:
-    Description: EC2 username
+  ServiceUsername:
+    Description: Name for a separate linux user runnin the systemd ipfs service
     Type: String
-    Default: ubuntu
+    Default: !Sub ${AWS::StackName}-user
 
   IpfsBinaryTarballURL:
     Description: Distribution URL serving ipfs binary tarball
@@ -204,11 +204,11 @@ Resources:
             /bin/mkdir -p ${VolumeDataDir}
 
             /usr/bin/sudo /usr/sbin/adduser \
-              ipfs_service_user \
+              ${ServiceUsername} \
               --system \
               --no-create-home
 
-            /usr/bin/sudo /bin/chown -hR ipfs_service_user ${VolumeDataDir}
+            /usr/bin/sudo /bin/chown -hR ${ServiceUsername} ${VolumeDataDir}
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
@@ -223,14 +223,14 @@ Resources:
 
             /usr/bin/sudo /usr/bin/mv $tmp_dir/go-ipfs/ipfs /usr/local/bin/ipfs
 
-            /bin/chmod +x /usr/local/bin/ipfs
+            /usr/bin/sudo /bin/chmod +x /usr/local/bin/ipfs
 
             cd /
 
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
-            # initializin ipfs as the ipfs_service_user
-            /usr/bin/sudo -u ipfs_service_user \
+            # initializin ipfs as the ${ServiceUsername}
+            /usr/bin/sudo -u ${ServiceUsername} \
               "export IPFS_PATH=${VolumeDataDir}; \
               /usr/local/bin/ipfs init -p server; \
               data_store_max=$((${VolumeSizeGiB} - 1)); \
@@ -244,7 +244,7 @@ Resources:
               Wants=network-online.target
               After=network-online.target
               [Service]
-              User=ipfs_service_user
+              User=${ServiceUsername}
               Environment="IPFS_PATH=${VolumeDataDir}"
               ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
