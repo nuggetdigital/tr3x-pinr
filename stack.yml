@@ -195,26 +195,29 @@ Resources:
 
             /usr/bin/sudo /bin/mkdir /data
 
+            ## remount the volume on instance restarts
             /usr/bin/echo -e \
               "/dev/xvdh  /data  ext4  defaults,nofail,nobootwait  0  2" \
             >> /etc/fstab
 
+            ## mount the volume
             /usr/bin/sudo /bin/mount /dev/xvdh /data
 
+            ## make the ipfs data dir
             /bin/mkdir ${VolumeIpfsPath}
 
-            /usr/bin/sudo /usr/bin/chown \
-              -hR \
-              ${ServiceUsername}:ubuntu \
-              ${VolumeIpfsPath}
+            ## grantin vol ownership to the systemd service user
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
 
-            /usr/bin/sudo /usr/bin/chmod -R 0666 /data
+            ## make the volume accessible to the service user only
+            /usr/bin/sudo -u ${ServiceUsername} /usr/bin/chmod -R 0700 /data
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
 
             cd $tmp_dir
 
+            ## download & extract go-ipfs
             /usr/bin/sudo /usr/bin/wget -q ${IpfsBinaryTarballURL}
 
             tarball=$(/usr/bin/basename ${IpfsBinaryTarballURL})
@@ -223,13 +226,14 @@ Resources:
 
             /usr/bin/sudo /usr/bin/mv $tmp_dir/go-ipfs/ipfs /usr/local/bin/ipfs
 
+            ## allow anyone to execute the ipfs binary
             /usr/bin/sudo /bin/chmod +x /usr/local/bin/ipfs
 
             cd /
 
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
-            # initializin ipfs
+            # initializin & configurin ipfs incl write gateway func
             export IPFS_PATH=${VolumeIpfsPath}
 
             /usr/local/bin/ipfs init --profile server
@@ -242,6 +246,7 @@ Resources:
 
             /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
 
+            # setup a systemd service
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
               Description=\"ipfs daemon\"
