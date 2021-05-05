@@ -27,7 +27,7 @@ Parameters:
     Type: String
     Default: https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
 
-  VolumeDataDir:
+  VolumeIpfsPath:
     Description: Data dir path on the EBS volume
     Type: String
     Default: /data/ipfs
@@ -201,13 +201,14 @@ Resources:
 
             /usr/bin/sudo /bin/mount /dev/xvdh /data
 
-            /usr/bin/sudo /bin/mkdir -p ${VolumeDataDir}
+            /bin/mkdir ${VolumeIpfsPath}
 
             /usr/bin/sudo /usr/bin/chown \
-              --no-dereference \
-              --recursive \
+              -hR \
               ${ServiceUsername}:ubuntu \
-              ${VolumeDataDir}
+              ${VolumeIpfsPath}
+
+            /usr/bin/sudo /usr/bin/chmod -R 0666 /data
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
@@ -229,7 +230,7 @@ Resources:
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
             # initializin ipfs
-            export IPFS_PATH=${VolumeDataDir}
+            export IPFS_PATH=${VolumeIpfsPath}
 
             /usr/local/bin/ipfs init --profile server
 
@@ -248,7 +249,7 @@ Resources:
               After=network-online.target
               [Service]
               User=${ServiceUsername}
-              Environment=\"IPFS_PATH=${VolumeDataDir}\"
+              Environment=\"IPFS_PATH=${VolumeIpfsPath}\"
               ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
               Restart=on-failure
