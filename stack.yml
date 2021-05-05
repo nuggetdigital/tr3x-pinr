@@ -203,8 +203,6 @@ Resources:
 
             /bin/mkdir -p ${VolumeDataDir}
 
-            /usr/bin/chown -hR ${ServiceUsername} {VolumeDataDir}
-
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
 
@@ -239,7 +237,7 @@ Resources:
 
             exit
 
-            /usr/bin/echo -e "
+            /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
               Description="ipfs daemon"
               Wants=network-online.target
