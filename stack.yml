@@ -201,9 +201,9 @@ Resources:
 
             /usr/bin/sudo /bin/mount /dev/xvdh /data
 
-            /usr/bin/sudo /bin/mkdir -p ${VolumeDataDir}
+            /bin/mkdir -p ${VolumeDataDir}
 
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername} {VolumeDataDir}
+            /usr/bin/chown -hR ${ServiceUsername} {VolumeDataDir}
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
