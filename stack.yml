@@ -191,8 +191,10 @@ Resources:
             #!/bin/bash
 
             # mount & configure the ebs volume
+            ## configure the instance's block device
             /usr/bin/sudo /usr/sbin/mkfs -t ext4 /dev/xvdh
 
+            ## make the volume root dir
             /usr/bin/sudo /bin/mkdir /data
 
             ## remount the volume on instance restarts
@@ -206,12 +208,6 @@ Resources:
             ## make the ipfs data dir
             /bin/mkdir ${VolumeIpfsPath}
 
-            ## grantin vol file ownership to the systemd service user
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data/ipfs/*
-
-            ## make vol files accessible to the service user only
-            /usr/bin/sudo /usr/bin/chmod -R 0700 /data/ipfs/*
-
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
 
@@ -220,36 +216,44 @@ Resources:
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
-
             cd $tmp_dir
 
-            ## download & extract go-ipfs
+            ## download go-ipfs
             /usr/bin/sudo /usr/bin/wget -q ${IpfsBinaryTarballURL}
 
+            ## extract go-ipfs
             tarball=$(/usr/bin/basename ${IpfsBinaryTarballURL})
-
             /usr/bin/sudo /usr/bin/tar xf $tmp_dir/$tarball
 
+            ## persist the ipfs binary in a std place
             /usr/bin/sudo /usr/bin/mv $tmp_dir/go-ipfs/ipfs /usr/local/bin/ipfs
 
-            ## allow anyone to execute the ipfs binary
-            /usr/bin/sudo /bin/chmod +x /usr/local/bin/ipfs
+            ## allow only the service user to execute the ipfs binary
+            /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
 
+            ## cleanup download artifacts
             cd /
-
             /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
             # initializin & configurin ipfs incl write gateway func
             export IPFS_PATH=${VolumeIpfsPath}
-
             /usr/local/bin/ipfs init --profile server
 
-            data_store_max=$((${VolumeSizeGiB} - 1))
+            ## explicitely grantin vol file ownership to the systemd service user
+            ipfs_files=$(/usr/bin/find /data/ipfs -type f)
+            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
 
+            ## make vol files accessible to the service user only
+            /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
+
+            ## set a disk high water mark
+            data_store_max=$((${VolumeSizeGiB} - 1))
             /usr/local/bin/ipfs config Datastore.StorageMax $data_store_maxGB
 
+            ## expose the gateway
             /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
+            ## make the gateway publicly writable (4now)
             /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
 
             # setup a systemd service
@@ -271,8 +275,10 @@ Resources:
             " \
             > /etc/systemd/system/ipfs.service
 
+            ## enable the systemd service
             /usr/bin/sudo /bin/systemctl enable ipfs.service
 
+            ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
 Outputs:
