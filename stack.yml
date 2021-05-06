@@ -206,17 +206,17 @@ Resources:
             ## make the ipfs data dir
             /bin/mkdir ${VolumeIpfsPath}
 
-            ## grantin vol dir ownership to the systemd service user
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
-
-            ## make vol dirs accessible to the service user only - 7xx b/c vol
-            /usr/bin/sudo /usr/bin/chmod -R 0700 /data
-
             ## grantin vol file ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data/ipfs/*
 
             ## make vol files accessible to the service user only
             /usr/bin/sudo /usr/bin/chmod -R 0700 /data/ipfs/*
+
+            ## grantin vol dir ownership to the systemd service user
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
+
+            ## make vol dirs accessible to the service user only - 7xx b/c vol
+            /usr/bin/sudo /usr/bin/chmod -R 0700 /data
 
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
