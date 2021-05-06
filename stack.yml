@@ -239,13 +239,6 @@ Resources:
             export IPFS_PATH=${VolumeIpfsPath}
             /usr/local/bin/ipfs init --profile server
 
-            ## explicitely grantin vol file ownership to the systemd service user
-            ipfs_files=$(/usr/bin/find /data/ipfs -type f)
-            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
-
-            ## make vol files accessible to the service user only
-            /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
-
             ## set a disk high water mark
             data_store_max=$((${VolumeSizeGiB} - 1))
             /usr/local/bin/ipfs config Datastore.StorageMax $data_store_maxGB
@@ -255,6 +248,13 @@ Resources:
 
             ## make the gateway publicly writable (4now)
             /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
+
+            ## explicitely grantin vol file ownership to the systemd service user
+            ipfs_files=$(/usr/bin/find /data/ipfs -type f)
+            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
+
+            ## make vol files accessible to the service user only
+            /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
 
             # setup a systemd service
             /usr/bin/sudo /usr/bin/echo -e "
