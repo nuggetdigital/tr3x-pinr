@@ -17,7 +17,7 @@ aws cloudformation deploy \
 
 ...get the generated access key id and secret access key from the setup stack outputs and add them to a local `.env` with the following contents:
 
-```txt
+```
 AWS_ACCESS_KEY_ID=AKIARQ4PXOL6GEXAMPLE
 AWS_SECRET_ACCESS_KEY=FzEXAMPLEUE9v0Xsg04MdaSnyhMJ72pMHEXAMPLE
 AWS_DEFAULT_REGION=us-east-1
@@ -38,6 +38,14 @@ then run `./keygen.sh` to generate a fresh ssh key pair and push it to ec2
 ### `./deploy.sh`
 
 deploys the stack
+
+*to enable `snapshot.sh` grab the `VolumeId` stack output and add it to the `.env` file:*
+
+```
+--snip--
+
+VOLUME_ID=vol-07c7b528247418b5f
+```
 
 ### `./ssh.sh`
 
