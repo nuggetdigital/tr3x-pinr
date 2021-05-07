@@ -208,12 +208,6 @@ Resources:
             ## make the ipfs data dir
             /bin/mkdir ${VolumeIpfsPath}
 
-            ## grantin vol dir ownership to the systemd service user
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
-
-            ## make vol dirs accessible to the service user only - 7xx b/c vol
-            /usr/bin/sudo /usr/bin/chmod -R 0700 /data
-
             # install the ipfs binary
             tmp_dir=$(/usr/bin/mktemp -d)
             cd $tmp_dir
@@ -248,6 +242,12 @@ Resources:
 
             ## make the gateway publicly writable (4now)
             /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
+
+            ## grantin vol dir ownership to the systemd service user
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
+
+            ## make vol dirs accessible to the service user only - 7xx b/c vol
+            /usr/bin/sudo /usr/bin/chmod -R 0700 /data
 
             ## explicitely grantin vol file ownership to the systemd service user
             ipfs_files=$(/usr/bin/find /data/ipfs -type f)
