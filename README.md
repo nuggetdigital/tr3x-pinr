@@ -4,6 +4,10 @@
 
 ***
 
+https://docs.ipfs.io/how-to/configure-node/#gateway-recipes
+
+***
+
 ## setup
 
 deploy the setup stack...
