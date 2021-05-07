@@ -282,6 +282,8 @@ Resources:
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
 ###############################################################################
+# confused about ingress ports as my node requires at least tcp 22, 8080, 4001
+# but the Listener and TargetGroup constructs only provide one port slot 🤔 ?? 
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -310,7 +312,8 @@ Resources:
         - TargetGroupArn: !GetAtt TargetGroup.Arn
           Type: forward
       LoadBalancerArn: !GetAtt NetworkLoadBalancer
-      Protocol: TLS
+      Protocol: TCP # just 4debug: should be TLS ?!
+      Port: 8080
       # SslPolicy: TODO
 
   LoadBalancer:
