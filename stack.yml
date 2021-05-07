@@ -59,7 +59,7 @@ Parameters:
       - dedicated
 
 Resources:
-  VPC:
+  Vpc:
     Type: AWS::EC2::VPC
     Properties:
       # NOTE: slicable into 6 subnets
@@ -77,7 +77,7 @@ Resources:
   Subnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref Vpc
       CidrBlock: 172.26.160.0/19
       AvailabilityZone: !Sub ${AWS::Region}a
       MapPublicIpOnLaunch: true
@@ -89,12 +89,12 @@ Resources:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
       InternetGatewayId: !Ref InternetGateway
-      VpcId: !Ref VPC
+      VpcId: !Ref Vpc
 
   RouteTable:
     Type: AWS::EC2::RouteTable
     Properties: 
-      VpcId: !Ref VPC
+      VpcId: !Ref Vpc
 
   Route:
     Type: AWS::EC2::Route
@@ -114,7 +114,7 @@ Resources:
     Properties: 
       GroupDescription: !Sub ${AWS::StackName}-security-group
       GroupName: !Sub ${AWS::StackName}-security-group
-      VpcId: !Ref VPC
+      VpcId: !Ref Vpc
       SecurityGroupIngress:
         - Description: !Sub ${AWS::StackName}-security-group-ingress-ssh
           CidrIp: 0.0.0.0/0
@@ -281,10 +281,20 @@ Resources:
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
-###############################################################################
-# confused about ingress ports as my node requires at least tcp 22, 8080, 4001
-# but the Listener and TargetGroup constructs only provide one port slot 🤔 ?? 
-  TargetGroup:
+  GatewayListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      # Certificates: TODO
+      #   - CertificateArn: !GetAtt Certificate.Arn
+      DefaultActions:
+        - TargetGroupArn: !GetAtt GatewayTargetGroup.Arn
+          Type: forward
+      LoadBalancerArn: !GetAtt NetworkLoadBalancer.Arn
+      Protocol: TCP
+      Port: 8080
+      # SslPolicy: TODO
+
+  GatewayTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
@@ -294,29 +304,48 @@ Resources:
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
-      Name: !Sub ${AWS::StackName}-target-group
+      Name: !Sub ${AWS::StackName}-gateway-target-group
       Port: 8080
       Protocol: TCP
       Targets:
         - Id: !Ref Instance
           Port: 8080
       TargetType: instance
-      VpcId: !Ref VPC
+      VpcId: !Ref Vpc
 
-  Listener:
+  HttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Certificates:
-        - CertificateArn: !GetAtt Certificate.Arn
+      # Certificates: TODO
+      #   - CertificateArn: !GetAtt Certificate.Arn
       DefaultActions:
-        - TargetGroupArn: !GetAtt TargetGroup.Arn
+        - TargetGroupArn: !GetAtt HttpsTargetGroup.Arn
           Type: forward
-      LoadBalancerArn: !GetAtt NetworkLoadBalancer
-      Protocol: TCP # just 4debug: should be TLS ?!
-      Port: 8080
+      LoadBalancerArn: !GetAtt NetworkLoadBalancer.Arn
+      Protocol: TCP
+      Port: 443
       # SslPolicy: TODO
 
-  LoadBalancer:
+  HttpsTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: TCP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Name: !Sub ${AWS::StackName}-https-target-group
+      Port: 443
+      Protocol: TCP
+      Targets:
+        - Id: !Ref Instance
+          Port: 443
+      TargetType: instance
+      VpcId: !Ref Vpc
+
+  NetworkLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
@@ -327,12 +356,14 @@ Resources:
       Subnets:
         - !Ref Subnet
       Type: network
-###############################################################################
 
 Outputs:
-  PublicIp:
-    Description: Public IP of the node
+  InstancePublicIp:
+    Description: Public ip of the node
     Value: !GetAtt Instance.PublicIp
+  NetworkLoadBalancerDomainName:
+    Description: DNS name of the network load balancer
+    Value: !Ref NetworkLoadBalancer.DNSName
   VolumeId:
     Description: Id of the EBS volume
     Value: !Ref Volume
