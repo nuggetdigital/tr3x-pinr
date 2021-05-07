@@ -281,6 +281,51 @@ Resources:
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
+###############################################################################
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: TCP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Name: !Sub ${AWS::StackName}-target-group
+      Port: 8080
+      Protocol: TCP
+      Targets:
+        - Id: !Ref Instance
+          Port: 8080
+      TargetType: instance
+      VpcId: !Ref VPC
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !GetAtt Certificate.Arn
+      DefaultActions:
+        - TargetGroupArn: !GetAtt TargetGroup.Arn
+          Type: forward
+      LoadBalancerArn: !GetAtt NetworkLoadBalancer
+      Protocol: TLS
+      # SslPolicy: TODO
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      LoadBalancerAttributes:
+        - LoadBalancerAttribute
+      Name: !Sub ${AWS::StackName}-load-balancer
+      Scheme: internet-facing
+      Subnets:
+        - !Ref Subnet
+      Type: network
+###############################################################################
+
 Outputs:
   PublicIp:
     Description: Public IP of the node
