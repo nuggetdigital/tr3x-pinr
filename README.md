@@ -4,6 +4,11 @@
 
 ***
 
+## todo
+
++ front a nlb forwardin tcp traffic from all ports
++ switch 2 a theoretical 2-instance setup
+
 https://docs.ipfs.io/how-to/configure-node/#gateway-recipes
 
 ***
