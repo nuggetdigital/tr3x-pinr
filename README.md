@@ -46,3 +46,9 @@ sshs into the instance
 ### `./destroy.sh`
 
 destroys the stack
+
+## api
+
+**gateway docs**
+
+`http://$PUBLIC_IP:8080/ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv`
