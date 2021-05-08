@@ -289,7 +289,7 @@ Resources:
       DefaultActions:
         - TargetGroupArn: !Ref GatewayTargetGroup
           Type: forward
-      LoadBalancerArn: !GetAtt NetworkLoadBalancer.Arn
+      LoadBalancerArn: !GetAtt LoadBalancer.Arn
       Protocol: TCP
       Port: 8080
       # SslPolicy: TODO
@@ -319,10 +319,11 @@ Resources:
       # Certificates: TODO
       #   - CertificateArn: !GetAtt Certificate.Arn
       DefaultActions:
+        # TODO: only let thru cat & add ipfs api routes
         - TargetGroupArn: !Ref HttpsTargetGroup
           Type: forward
-      LoadBalancerArn: !GetAtt NetworkLoadBalancer.Arn
-      Protocol: TCP
+      LoadBalancerArn: !GetAtt LoadBalancer.Arn
+      Protocol: HTTPS
       Port: 443
       # SslPolicy: TODO
 
@@ -337,15 +338,15 @@ Resources:
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
       Name: !Sub ${AWS::StackName}-https-target-group
-      Port: 443
-      Protocol: TCP
+      Port: 5001
+      Protocol: HTTP
       Targets:
         - Id: !Ref Instance
-          Port: 443
+          Port: 5001
       TargetType: instance
       VpcId: !Ref Vpc
 
-  NetworkLoadBalancer:
+  LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
@@ -355,7 +356,7 @@ Resources:
       Scheme: internet-facing
       Subnets:
         - !Ref Subnet
-      Type: network
+      Type: application
 
 Outputs:
   InstancePublicIp:
