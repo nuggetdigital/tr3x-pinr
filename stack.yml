@@ -313,6 +313,7 @@ Resources:
       TargetType: instance
       VpcId: !Ref Vpc
 
+  # DOCS https://serverfault.com/questions/867745/how-to-block-loadbalancer-forwarding-to-a-specific-path
   HttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
