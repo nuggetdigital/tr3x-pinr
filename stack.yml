@@ -117,11 +117,33 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref SubnetA
 
-  SecurityGroup:
+#
+  LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
-      GroupDescription: !Sub ${AWS::StackName}-security-group
-      GroupName: !Sub ${AWS::StackName}-security-group
+      GroupDescription: !Sub ${AWS::StackName}-load-balancer-security-group
+      GroupName: !Sub ${AWS::StackName}-load-balancer-security-group
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - Description: !Sub ${AWS::StackName}-load-balancer-security-group-ingress-all
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+
+      SecurityGroupEgress:
+        - Description: !Sub ${AWS::StackName}-security-group-egress-mini-api
+          CidrIp: 172.26.160.0/19
+          IpProtocol: tcp
+          FromPort: 5001
+          ToPort: 80
+#
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: !Sub ${AWS::StackName}-instance-security-group
+      GroupName: !Sub ${AWS::StackName}-instance-security-group
       VpcId: !Ref Vpc
       SecurityGroupIngress:
         - Description: !Sub ${AWS::StackName}-security-group-ingress-ssh
@@ -136,23 +158,12 @@ Resources:
           FromPort: 4001
           ToPort: 4001
 
-        - Description: !Sub ${AWS::StackName}-security-group-ingress-gateway
-          CidrIp: 0.0.0.0/0
+        # TODO: allow alb tcp traffic on port 5001
+        - Description: !Sub ${AWS::StackName}-security-group-ingress-alb
+          CidrIp: TODO/0
           IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
-
-        - Description: !Sub ${AWS::StackName}-security-group-ingress-http
-          CidrIp: 0.0.0.0/0
-          IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-
-        - Description: !Sub ${AWS::StackName}-security-group-ingress-https
-          CidrIp: 0.0.0.0/0
-          IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
+          FromPort: 5001
+          ToPort: 5001
 
       SecurityGroupEgress:
         - Description: !Sub ${AWS::StackName}-security-group-egress-all
@@ -196,7 +207,7 @@ Resources:
         InstanceType: !Ref InstanceType
         KeyName: !Ref SSHPublicKeyName
         SecurityGroupIds:
-          - !Ref SecurityGroup
+          - !Ref InstanceSecurityGroup
         UserData: !Base64
           "Fn::Sub": |
             #!/bin/bash
@@ -307,7 +318,7 @@ Resources:
       Actions:
         - ForwardConfig:
             TargetGroups:
-              - TargetGroupArn: !Ref HttpsTargetGroup
+              - TargetGroupArn: !Ref ApiTargetGroup
           Order: 1
           Type: forward
       Conditions:
@@ -333,21 +344,21 @@ Resources:
       Port: 80 #443
       # SslPolicy: TODO
 
-  HttpsTargetGroup:
+  ApiTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
       HealthCheckPort: traffic-port
-      HealthCheckProtocol: TCP
+      HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
-      Name: !Sub ${AWS::StackName}-https-target-group
-      Port: 5001
+      Name: !Sub ${AWS::StackName}-api-target-group
       Protocol: HTTP
       Targets:
-        - Id: !Ref Instance
+        - AvailabilityZone: !Sub ${AWS::Region}a
+          Id: !Ref Instance
           Port: 5001
       TargetType: instance
       VpcId: !Ref Vpc
