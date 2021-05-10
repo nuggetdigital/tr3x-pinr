@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  GO111MODULE: auto
+
 jobs:
   prerelease:
     runs-on: ubuntu-20.04
@@ -67,6 +70,7 @@ jobs:
 
       - name: add the plugin to the preload list
         run: |
+          echo "[DEBUG] $(ls)"
           echo "s3ds github.com/ipfs/go-ds-s3/plugin 0" \
           >> ./plugin/loader/preload_list
 
