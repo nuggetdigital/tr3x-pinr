@@ -134,8 +134,8 @@ Resources:
         - Description: !Sub ${AWS::StackName}-load-balancer-security-group-egress-mini-api
           CidrIp: 172.26.160.0/19
           IpProtocol: tcp
-          FromPort: 5001
-          ToPort: 80
+          FromPort: 80
+          ToPort: 5001
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -156,7 +156,7 @@ Resources:
           FromPort: 4001
           ToPort: 4001
 
-        - Description: !Sub ${AWS::StackName}-instance-security-group-ingress-alb
+        - Description: !Sub ${AWS::StackName}-instance-security-group-ingress-load-balancer
           SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
           IpProtocol: tcp
           FromPort: 5001
@@ -165,7 +165,7 @@ Resources:
       SecurityGroupEgress:
         - Description: !Sub ${AWS::StackName}-instance-security-group-egress-all
           CidrIp: 0.0.0.0/0
-          IpProtocol: "-1"
+          IpProtocol: tcp
           FromPort: 0
           ToPort: 0
 
@@ -309,7 +309,7 @@ Resources:
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
-  HttpsListenerRule:
+  ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
@@ -324,10 +324,10 @@ Resources:
             Values:
               - /api/v0/add
               - /api/v0/cat
-      ListenerArn: !GetAtt HttpsListener.Arn
+      ListenerArn: !GetAtt ApiListener.Arn
       Priority: 1
 
-  HttpsListener:
+  ApiListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       # Certificates: TODO
