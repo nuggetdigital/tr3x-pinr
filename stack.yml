@@ -227,7 +227,8 @@ Resources:
     Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
       LaunchTemplateData:
-        IamInstanceProfile: !GetAtt InstanceProfile.Arn
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
         ImageId: !Ref InstanceImage
         InstanceType: !Ref InstanceType
         KeyName: !Ref SSHPublicKeyName
