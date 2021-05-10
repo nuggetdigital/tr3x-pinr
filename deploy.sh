@@ -20,7 +20,8 @@ aws cloudformation create-change-set \
   --stack-name $STACK_NAME \
   --change-set-name $CHANGE_SET_NAME \
   --change-set-type $change_set_type \
-  --template-body file://stack.yml
+  --template-body file://stack.yml \
+  --capabilities CAPABILITY_NAMED_IAM
 
 change_set="$( \
   aws cloudformation describe-change-set \
