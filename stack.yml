@@ -376,7 +376,7 @@ Resources:
             Values:
               - /api/v0/add
               - /api/v0/cat
-      ListenerArn: !GetAtt ApiListener.Arn
+      ListenerArn: !Ref ApiListener
       Priority: 1
 
   ApiListener:
