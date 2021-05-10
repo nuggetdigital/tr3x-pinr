@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -eE
+set -eEu
 
 source ./.env
 
 stack="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"
 
 public_ip="$( \
-  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"PublicIp\") | .OutputValue" <<< "$stack" \
+  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"InstancePublicIp\") | .OutputValue" <<< "$stack" \
 )"
 
 ssh -i $HOME/.ssh/$SSH_PRIVATE_KEY_NAME $SSH_USERNAME@$public_ip
