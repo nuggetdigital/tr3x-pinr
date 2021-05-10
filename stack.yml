@@ -196,7 +196,6 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       InstanceProfileName: !Sub ${AWS::StackName}-instance-profile
-      Path: /
       Roles: 
         - !Ref InstanceRole
 
