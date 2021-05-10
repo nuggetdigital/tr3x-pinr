@@ -7,6 +7,7 @@ on:
 
 env:
   GO111MODULE: auto
+  DSS3_VERSION: v0.7.0
 
 jobs:
   prerelease:
@@ -61,16 +62,12 @@ jobs:
         with:
           repository: ipfs/go-ipfs
           ref: ${{ env.GO_IPFS_TAG }}
-          path: ./go-ipfs
 
       - name: pull in the datastore plugin
-        run: |
-          cd ./go-ipfs
-          go get github.com/ipfs/go-ds-s3@latest
+        run: go get github.com/ipfs/go-ds-s3@$DSS3_VERSION
 
       - name: add the plugin to the preload list
         run: |
-          echo "[DEBUG] $(ls)"
           echo "s3ds github.com/ipfs/go-ds-s3/plugin 0" \
           >> ./plugin/loader/preload_list
 
@@ -101,7 +98,7 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./ipfs.gz.sha256sum
-          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-x86_64-unknown-linux-gnu.gz.sha256sum
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-$DSS3_VERSION-x86_64-unknown-linux-gnu.gz.sha256sum
           asset_content_type: application/gzip
 
       - name: upload the prebuilt binary
@@ -111,5 +108,5 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./ipfs.gz
-          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-x86_64-unknown-linux-gnu.gz
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-$DSS3_VERSION-x86_64-unknown-linux-gnu.gz
           asset_content_type: application/gzip
