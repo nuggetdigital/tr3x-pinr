@@ -293,9 +293,9 @@ Resources:
       Conditions:
         - Field: path-pattern
           PathPatternConfig:
-          Values:
-            - /api/v0/add
-            - /api/v0/cat
+            Values:
+              - /api/v0/add
+              - /api/v0/cat
       ListenerArn: !GetAtt HttpsListener.Arn
       Priority: 1
 
