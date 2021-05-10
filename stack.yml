@@ -176,6 +176,9 @@ Resources:
       # SnapshotId: !Ref SnapshotId
       VolumeType: gp3
 
+  Bucket:
+    Type: AWS::S3::Bucket
+
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -241,7 +244,16 @@ Resources:
             /usr/local/bin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
             ## make the gateway publicly writable (4now)
-            /usr/local/bin/ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
+            /usr/local/bin/ipfs config \
+              --json \
+              Gateway.HTTPHeaders.Access-Control-Allow-Methods \
+              '["GET", "POST"]'
+
+            ## TODO configurin our s3 datastore
+            /usr/local/bin/ipfs config \
+              --json \
+              Datastore.Spec \
+              '{"mounts":[{"bucket":"${Bucket}","mountpoint":"/blocks","region":"${AWS::Region}"},{"mountpoint":"/","path":"datastore","type":"levelds"}],"type":"mount"}'
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
