@@ -407,8 +407,7 @@ Resources:
       Port: 5001
       Protocol: HTTP
       Targets:
-        - AvailabilityZone: !Sub ${AWS::Region}a
-          Id: !Ref Instance
+        - Id: !Ref Instance
           Port: 5001
       TargetType: instance
       VpcId: !Ref Vpc
