@@ -1,0 +1,111 @@
+name: bundle
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: get the current version tag for ipfs-pinr
+        run: |
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
+          echo "GO_IPFS_TAG=$pushed_tag" >> $GITHUB_ENV
+
+      - name: pre release draft
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.GO_IPFS_TAG }}
+          release_name: ${{ env.GO_IPFS_TAG }}
+          draft: true
+          prerelease: true
+
+      - name: prep a release upload url artifact
+        run: |
+          release_upload_url=${{ steps.create_release.outputs.upload_url }}
+          echo "[DEBUG] release upload url $release_upload_url"
+          echo "$release_upload_url" > ./release_upload_url.txt
+
+      - name: upload the release upload url artifact
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: release_upload_url
+          path: ./release_upload_url.txt
+
+  bundle:
+    needs: prerelease
+    runs-on: ubuntu-20.04
+    steps:
+      - name: get the current version tag for ipfs-pinr
+        run: |
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
+          echo "GO_IPFS_TAG=$pushed_tag" >> $GITHUB_ENV
+
+      - name: make sure a correct golang version is installed
+        uses: actions/setup-go@v2.1.3
+        with:
+          go-version: '1.16.4'
+
+      - name: checkout the go-ipfs repo
+        uses: actions/checkout@v2.3.4
+        with:
+          repository: ipfs/go-ipfs
+          ref: ${{ env.GO_IPFS_TAG }}
+          path: ./go-ipfs
+
+      - name: pull in the datastore plugin
+        run: |
+          cd ./go-ipfs
+          go get github.com/ipfs/go-ds-s3@latest
+
+      - name: add the plugin to the preload list
+        run: |
+          echo "s3ds github.com/ipfs/go-ds-s3/plugin 0" \
+          >> ./plugin/loader/preload_list
+
+      - name: build go-ipfs incl the s3 datastore plugin
+        run: make build
+
+      - name: monkey test the prebuilt ipfs binary
+        run: ./cmd/ipfs/ipfs --version --all
+
+      - name: gzipup the binary
+        run: gzip -c ./cmd/ipfs/ipfs > ./ipfs.gz
+
+      - name: sha256sum the gzipd binary
+        run: sha256sum -b ./ipfs.gz | grep -oE '^[a-f0-9]+' > ./ipfs.gz.sha256sum
+
+      - name: download the release upload url artifact
+        uses: actions/download-artifact@v2.0.8
+        with:
+          name: release_upload_url
+
+      - name: set the release upload url as an env var
+        run: echo "RELEASE_UPLOAD_URL=$(<./release_upload_url.txt)" >> $GITHUB_ENV
+
+      - name: upload the sha256sum
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+          asset_path: ./ipfs.gz.sha256sum
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-x86_64-unknown-linux-gnu.gz.sha256sum
+          asset_content_type: application/gzip
+
+      - name: upload the prebuilt binary
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+          asset_path: ./ipfs.gz
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-x86_64-unknown-linux-gnu.gz
+          asset_content_type: application/gzip
