@@ -352,6 +352,7 @@ Resources:
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
       Name: !Sub ${AWS::StackName}-api-target-group
+      Port: 5001
       Protocol: HTTP
       Targets:
         - AvailabilityZone: !Sub ${AWS::Region}a
