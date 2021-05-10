@@ -348,8 +348,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      LoadBalancerAttributes:
-        - LoadBalancerAttribute
       Name: !Sub ${AWS::StackName}-load-balancer
       Scheme: internet-facing
       Subnets:
