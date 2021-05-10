@@ -281,48 +281,33 @@ Resources:
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
-  GatewayListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
+  HttpsListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      # Certificates: TODO
-      #   - CertificateArn: !GetAtt Certificate.Arn
-      DefaultActions:
-        - TargetGroupArn: !Ref GatewayTargetGroup
+      Actions:
+        - ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref HttpsTargetGroup
+          Order: 1
           Type: forward
-      LoadBalancerArn: !GetAtt LoadBalancer.Arn
-      Protocol: TCP
-      Port: 8080
-      # SslPolicy: TODO
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+          Values:
+            - /api/v0/add
+            - /api/v0/cat
+      ListenerArn: !GetAtt HttpsListener.Arn
+      Priority: 1
 
-  GatewayTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckEnabled: true
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPort: traffic-port
-      HealthCheckProtocol: TCP
-      HealthCheckTimeoutSeconds: 10
-      HealthyThresholdCount: 3
-      UnhealthyThresholdCount: 3
-      Name: !Sub ${AWS::StackName}-gateway-target-group
-      Port: 8080
-      Protocol: TCP
-      Targets:
-        - Id: !Ref Instance
-          Port: 8080
-      TargetType: instance
-      VpcId: !Ref Vpc
-
-  # DOCS https://serverfault.com/questions/867745/how-to-block-loadbalancer-forwarding-to-a-specific-path
   HttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       # Certificates: TODO
       #   - CertificateArn: !GetAtt Certificate.Arn
       DefaultActions:
-        # TODO: only let thru cat & add ipfs api routes
-        - TargetGroupArn: !Ref HttpsTargetGroup
-          Type: forward
+        - FixedResponseConfig:
+            StatusCode: 403
+          Type: fixed-response
       LoadBalancerArn: !GetAtt LoadBalancer.Arn
       Protocol: HTTPS
       Port: 443
