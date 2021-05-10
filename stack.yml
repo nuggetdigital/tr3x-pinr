@@ -169,6 +169,37 @@ Resources:
           FromPort: 0
           ToPort: 0
 
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName:
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt IpfsDatastoreBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub arn:aws:s3:::${IpfsDatastoreBucket}/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      InstanceProfileName: ${AWS::StackName}-instance-profile
+      Path: /
+      Roles: 
+        - !Ref InstanceRole
+
   Instance:
     Type: AWS::EC2::Instance
     Properties: 
@@ -192,14 +223,12 @@ Resources:
       # SnapshotId: !Ref SnapshotId
       VolumeType: gp3
 
-  Bucket:
-    Type: AWS::S3::Bucket
-
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
       LaunchTemplateData:
+        IamInstanceProfile: !GetAtt InstanceProfile.Arn
         ImageId: !Ref InstanceImage
         InstanceType: !Ref InstanceType
         KeyName: !Ref SSHPublicKeyName
@@ -269,7 +298,7 @@ Resources:
             /usr/local/bin/ipfs config \
               --json \
               Datastore.Spec \
-              '{"mounts":[{"bucket":"${Bucket}","mountpoint":"/blocks","region":"${AWS::Region}"},{"mountpoint":"/","path":"datastore","type":"levelds"}],"type":"mount"}'
+              '{"mounts":[{"bucket":"${IpfsDatastoreBucket}","mountpoint":"/blocks","region":"${AWS::Region}"},{"mountpoint":"/","path":"datastore","type":"levelds"}],"type":"mount"}'
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
@@ -308,6 +337,29 @@ Resources:
 
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
+
+  IpfsDatastoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-ipfs-datastore-bucket
+
+  # IpfsDatastoreBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref IpfsDatastoreBucket
+  #     PolicyDocument:
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Sid: AllowOriginAccessIdentity
+  #           Effect: Allow
+  #           Principal:
+  #             CanonicalUser: !GetAtt OriginAccessIdentity.S3CanonicalUserId
+  #           Action:
+  #             - s3:Get*
+  #             - s3:List*
+  #           Resource:
+  #             - !GetAtt IpfsDatastoreBucket.Arn
+  #             - !Sub arn:aws:s3:::${IpfsDatastoreBucket}/*
 
   ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
