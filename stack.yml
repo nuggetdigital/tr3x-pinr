@@ -308,7 +308,7 @@ Resources:
         - FixedResponseConfig:
             StatusCode: 403
           Type: fixed-response
-      LoadBalancerArn: !GetAtt LoadBalancer.Arn
+      LoadBalancerArn: !Ref LoadBalancer
       Protocol: HTTP #HTTPS
       Port: 80 #443
       # SslPolicy: TODO
@@ -348,9 +348,9 @@ Outputs:
   InstancePublicIp:
     Description: Public ip of the node
     Value: !GetAtt Instance.PublicIp
-  NetworkLoadBalancerDomainName:
-    Description: DNS name of the network load balancer
-    Value: !Ref NetworkLoadBalancer.DNSName
+  LoadBalancerDomainName:
+    Description: DNS name of the load balancer
+    Value: !GetAtt LoadBalancer.DNSName
   VolumeId:
     Description: Id of the EBS volume
     Value: !Ref Volume
