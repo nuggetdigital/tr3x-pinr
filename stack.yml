@@ -74,12 +74,20 @@ Resources:
       EnableDnsHostnames: true
       InstanceTenancy: !Ref InstanceTenancy
 
-  Subnet:
+  SubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
       CidrBlock: 172.26.160.0/19
       AvailabilityZone: !Sub ${AWS::Region}a
+      MapPublicIpOnLaunch: true
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 172.26.128.0/19
+      AvailabilityZone: !Sub ${AWS::Region}b
       MapPublicIpOnLaunch: true
 
   InternetGateway:
@@ -107,7 +115,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties: 
       RouteTableId: !Ref RouteTable
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref SubnetA
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -157,7 +165,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref SubnetA
       Volumes:
         - Device: /dev/xvdh # from: ssh into the instance & lsblk
           VolumeId: !Ref Volume
@@ -351,7 +359,8 @@ Resources:
       Name: !Sub ${AWS::StackName}-load-balancer
       Scheme: internet-facing
       Subnets:
-        - !Ref Subnet
+        - !Ref SubnetA
+        - !Ref SubnetB
       Type: application
 
 Outputs:
