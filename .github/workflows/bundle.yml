@@ -98,7 +98,7 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./ipfs.gz.sha256sum
-          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-$DSS3_VERSION-x86_64-unknown-linux-gnu.gz.sha256sum
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-${{ env.DSS3_VERSION }}-x86_64-unknown-linux-gnu.gz.sha256sum
           asset_content_type: application/gzip
 
       - name: upload the prebuilt binary
@@ -108,5 +108,5 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./ipfs.gz
-          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-$DSS3_VERSION-x86_64-unknown-linux-gnu.gz
+          asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-${{ env.DSS3_VERSION }}-x86_64-unknown-linux-gnu.gz
           asset_content_type: application/gzip
