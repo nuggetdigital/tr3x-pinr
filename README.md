@@ -60,5 +60,5 @@ std `datastore_spec`
 custom `datastore_spec`
 
 ```json
-{"mounts":[{"mountpoint":"/blocks","path":"blocks","shardFunc":"/repo/flatfs/shard/v1/next-to-last/2","type":"flatfs"},{"mountpoint":"/","path":"datastore","type":"levelds"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"meta","accessKey":"","secretKey":""},"mountpoint":"/","prefix":"s3.datastore","type":"measure"}],"type":"mount"}
+{"mounts":[{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"meta","accessKey":"","secretKey":""},"mountpoint":"/","prefix":"s3.datastore","type":"measure"}],"type":"mount"}
 ```

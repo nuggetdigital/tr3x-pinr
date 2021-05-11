@@ -269,6 +269,9 @@ Resources:
             /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
 
             # initializin & configurin ipfs incl write gateway func
+            ## configurin our s3 datastore
+            /usr/bin/echo '{"mounts":[{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"meta","accessKey":"","secretKey":""},"mountpoint":"/","prefix":"s3.datastore","type":"measure"}],"type":"mount"}' > ${VolumeIpfsPath}/datastore_spec
+
             export IPFS_PATH=${VolumeIpfsPath}
             /usr/local/bin/ipfs init --profile server
 
@@ -284,9 +287,6 @@ Resources:
               --json \
               Gateway.HTTPHeaders.Access-Control-Allow-Methods \
               '["GET", "POST"]'
-
-            ## configurin our s3 datastore
-            /usr/bin/echo '{"mounts":[{"mountpoint":"/blocks","path":"blocks","shardFunc":"/repo/flatfs/shard/v1/next-to-last/2","type":"flatfs"},{"mountpoint":"/","path":"datastore","type":"levelds"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"meta","accessKey":"","secretKey":""},"mountpoint":"/","prefix":"s3.datastore","type":"measure"}],"type":"mount"}' > ${VolumeIpfsPath}/datastore_spec
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
