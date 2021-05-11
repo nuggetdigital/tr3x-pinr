@@ -335,24 +335,6 @@ Resources:
     Properties:
       BucketName: !Sub ${AWS::StackName}-ipfs-datastore-bucket
 
-  # IpfsDatastoreBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Properties:
-  #     Bucket: !Ref IpfsDatastoreBucket
-  #     PolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Sid: AllowOriginAccessIdentity
-  #           Effect: Allow
-  #           Principal:
-  #             CanonicalUser: !GetAtt OriginAccessIdentity.S3CanonicalUserId
-  #           Action:
-  #             - s3:Get*
-  #             - s3:List*
-  #           Resource:
-  #             - !GetAtt IpfsDatastoreBucket.Arn
-  #             - !Sub arn:aws:s3:::${IpfsDatastoreBucket}/*
-
   ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
