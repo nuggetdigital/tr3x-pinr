@@ -286,10 +286,11 @@ Resources:
               '["GET", "POST"]'
 
             ## configurin our s3 datastore
+            /usr/bin/sudo /usr/bin/rm ${VolumeIpfsPath}/datastore_spec
             /usr/local/bin/ipfs config \
               --json \
               Datastore.Spec \
-              '{"mounts":[{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"subdir","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}]}'
+              '{"type":"mount","mounts":[{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"},{"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"meta","accessKey":"","secretKey":""},"mountpoint":"/","prefix":"s3.datastore","type":"measure"}]}'
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
