@@ -22,10 +22,10 @@ Parameters:
     Type: String
     Default: ubuntu
 
-  IpfsBinaryTarballURL:
-    Description: Distribution URL serving ipfs binary tarball
+  IpfsBinaryURL:
+    Description: URL serving the ipfs binary incl the S3 datastore plugin
     Type: String
-    Default: https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
+    Default: https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
 
   VolumeIpfsPath:
     Description: Data dir path on the EBS volume
@@ -257,25 +257,16 @@ Resources:
             /bin/mkdir ${VolumeIpfsPath}
 
             # install the ipfs binary
-            tmp_dir=$(/usr/bin/mktemp -d)
-            cd $tmp_dir
+            ## download the customized ipfs+dss3 binary
+            /usr/bin/curl -fsSL ${IpfsBinaryURL} \
+            | /usr/bin/gunzip \
+            > /usr/local/bin/ipfs
 
-            ## download go-ipfs
-            /usr/bin/sudo /usr/bin/wget -q ${IpfsBinaryTarballURL}
-
-            ## extract go-ipfs
-            tarball=$(/usr/bin/basename ${IpfsBinaryTarballURL})
-            /usr/bin/sudo /usr/bin/tar xf $tmp_dir/$tarball
-
-            ## persist the ipfs binary in a std place
-            /usr/bin/sudo /usr/bin/mv $tmp_dir/go-ipfs/ipfs /usr/local/bin/ipfs
+            ## grant ipfs binary ownership to the service user
+            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu /usr/local/bin/ipfs
 
             ## allow only the service user to execute the ipfs binary
             /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
-
-            ## cleanup download artifacts
-            cd /
-            /usr/bin/sudo /usr/bin/rm -rf $tmp_dir
 
             # initializin & configurin ipfs incl write gateway func
             export IPFS_PATH=${VolumeIpfsPath}
