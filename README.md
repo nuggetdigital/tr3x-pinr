@@ -48,3 +48,11 @@ sshs into the instance
 ### `./destroy.sh`
 
 destroys the stack
+
+***
+
+std `datastore_spec`
+
+```json
+{"mounts":[{"mountpoint":"/blocks","path":"blocks","shardFunc":"/repo/flatfs/shard/v1/next-to-last/2","type":"flatfs"},{"mountpoint":"/","path":"datastore","type":"levelds"}],"type":"mount"}
+```

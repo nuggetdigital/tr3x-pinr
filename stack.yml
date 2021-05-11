@@ -286,6 +286,7 @@ Resources:
               '["GET", "POST"]'
 
             ## configurin our s3 datastore
+            /usr/bin/echo '{}' > ${VolumeIpfsPath}/datastore_spec
             /usr/local/bin/ipfs config \
               --json \
               Datastore.Spec \
