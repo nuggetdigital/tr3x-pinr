@@ -4,15 +4,6 @@
 
 ***
 
-## todo
-
-+ front a nlb forwardin tcp traffic from all ports
-+ switch 2 a theoretical 2-instance setup
-
-https://docs.ipfs.io/how-to/configure-node/#gateway-recipes
-
-***
-
 ## setup
 
 deploy the setup stack...
@@ -38,7 +29,9 @@ SSH_USERNAME=ubuntu
 SSH_PRIVATE_KEY_NAME=id_rsa_ipfs_pinr
 ```
 
-then run `./keygen.sh` to generate a fresh ssh key pair and push it to ec2
+then run `./keygen.sh` to generate a fresh ssh key pair and push its public key to ec2
+
+note that the corresponding private key remains in your machine's `~/.ssh`
 
 ***
 
@@ -48,14 +41,6 @@ then run `./keygen.sh` to generate a fresh ssh key pair and push it to ec2
 
 deploys the stack
 
-*to enable `snapshot.sh` grab the `VolumeId` stack output and add it to the `.env` file:*
-
-```
---snip--
-
-VOLUME_ID=vol-07c7b528247418b5f
-```
-
 ### `./ssh.sh`
 
 sshs into the instance
@@ -63,9 +48,3 @@ sshs into the instance
 ### `./destroy.sh`
 
 destroys the stack
-
-## api
-
-**gateway docs**
-
-`http://$PUBLIC_IP:8080/ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv`
