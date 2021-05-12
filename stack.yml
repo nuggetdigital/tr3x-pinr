@@ -286,7 +286,7 @@ Resources:
             temp_file=$(mktemp)
             /usr/bin/jq \
               -c \
-              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"blocks","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
+              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
               ${VolumeIpfsPath}/config \
             > $temp_file
 
@@ -344,7 +344,7 @@ Resources:
   IpfsDatastoreBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AWS::StackName}-ipfs-datastore-bucket
+      BucketName: !Sub ${AWS::StackName}-datastore-bucket
 
   ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
