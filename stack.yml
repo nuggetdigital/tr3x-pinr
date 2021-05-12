@@ -200,6 +200,7 @@ Resources:
         - !Ref InstanceRole
 
   Instance:
+    DependsOn: IpfsDatastoreBucket
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
