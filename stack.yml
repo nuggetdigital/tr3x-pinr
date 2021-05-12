@@ -190,6 +190,7 @@ Resources:
                 Action:
                   - s3:PutObject
                   - s3:GetObject
+                  - s3:DeleteObject
                 Resource: !Sub arn:aws:s3:::${IpfsDatastoreBucket}/*
 
   InstanceProfile:
@@ -276,18 +277,21 @@ Resources:
             /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
 
             # setup ipfs
-            ## initializin the ipfs repo with our custom config
             export IPFS_PATH=${VolumeIpfsPath}
+
+            ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --profile server
 
-            ## switchin the /blocks mount point to s3
+            ## interpolatin our custom s3 datastore for /blocks
             temp_file=$(mktemp)
             /usr/bin/jq \
               -c \
-              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
+              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"blocks","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
               ${VolumeIpfsPath}/config \
             > $temp_file
-            /usr/bin/cp $temp_file ${VolumeIpfsPath}/config
+
+            ## reinit the repo from our custom config 
+            /usr/local/bin/ipfs init $temp_file
             /usr/bin/rm $temp_file
 
             ## adjustin the datastore_spec
