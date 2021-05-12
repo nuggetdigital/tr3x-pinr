@@ -68,8 +68,8 @@ custom ipfs config
 ```json
 {
   "Identity": {
-    "PeerID": "12D3KooWNVgg1mAsxNFePKHR3uM77S6vd8nMDkWAWfrVqgejz2b5",
-    "PrivKey": "$PRIV_KEY"
+    "PeerID": null,
+    "PrivKey":  null
   },
   "Datastore": {
     "StorageMax": "10GB",
