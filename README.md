@@ -51,6 +51,10 @@ destroys the stack
 
 ***
 
+dss3 issue
+
+https://github.com/ipfs/go-ds-s3/issues/17#issuecomment-521410390
+
 custom `datastore_spec`
 
 ```json
@@ -61,7 +65,7 @@ custom `datastore_spec`
           "type":"s3ds",
           "region":"${AWS::Region}",
           "bucket":"${IpfsDatastoreBucket}",
-          "rootDirectory":"data",
+          "rootDirectory":"blocks",
           "accessKey":"",
           "secretKey":""
         },
@@ -98,7 +102,7 @@ custom ipfs config
                   "type":"s3ds",
                   "region":"${AWS::Region}",
                   "bucket":"${IpfsDatastoreBucket}",
-                  "rootDirectory":"data",
+                  "rootDirectory":"blocks",
                   "accessKey":"",
                   "secretKey":""
                },
