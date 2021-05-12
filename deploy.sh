@@ -52,7 +52,7 @@ if [[ "$instance_replacement" == "True" ]]; then
   )"
 
   volume_id="$( \
-    jq -r '.Stacks[] | select(.StackName == "bluford") | .Outputs[] | select(.OutputKey == "VolumeId") | .OutputValue' <<< "$stack" \
+    jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"VolumeId\") | .OutputValue" <<< "$stack" \
   )"
 
   instance_id="$(jq -r '.ResourceChange.PhysicalResourceId' <<< "$instance")"
