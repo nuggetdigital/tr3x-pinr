@@ -294,13 +294,6 @@ Resources:
             /usr/local/bin/ipfs init $temp_file
             /usr/bin/rm $temp_file
 
-            ## adjustin the datastore_spec
-            /usr/bin/jq \
-              -c \
-              '.Datastore.Spec' \
-              ${VolumeIpfsPath}/config \
-            > ${VolumeIpfsPath}/datastore_spec
-
             ## cleanup of jq and apt stuff
             /usr/bin/sudo /usr/bin/apt-get remove jq -y
             /usr/bin/sudo /usr/bin/apt-get clean -y
