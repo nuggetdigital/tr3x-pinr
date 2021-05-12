@@ -51,12 +51,32 @@ destroys the stack
 
 ***
 
-read bout ipfs conf here https://github.com/ipfs/go-ipfs/blob/master/docs/config.md
-
-std `datastore_spec`
+custom `datastore_spec`
 
 ```json
-{"mounts":[{"mountpoint":"/blocks","path":"blocks","shardFunc":"/repo/flatfs/shard/v1/next-to-last/2","type":"flatfs"},{"mountpoint":"/","path":"datastore","type":"levelds"}],"type":"mount"}
+{
+  "mounts":[
+    {
+        "child":{
+          "type":"s3ds",
+          "region":"${AWS::Region}",
+          "bucket":"${IpfsDatastoreBucket}",
+          "rootDirectory":"data",
+          "accessKey":"",
+          "secretKey":""
+        },
+        "mountpoint":"/blocks",
+        "prefix":"s3.datastore",
+        "type":"measure"
+    },
+    {
+        "mountpoint":"/",
+        "path":"datastore",
+        "type":"levelds"
+    }
+  ],
+  "type":"mount"
+}
 ```
 
 custom ipfs config

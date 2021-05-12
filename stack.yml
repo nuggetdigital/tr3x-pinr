@@ -267,7 +267,9 @@ Resources:
             > /usr/local/bin/ipfs
 
             ## grant ipfs binary ownership to the service user
-            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu /usr/local/bin/ipfs
+            /usr/bin/sudo /usr/bin/chown \
+              ${ServiceUsername}:ubuntu \
+              /usr/local/bin/ipfs
 
             ## allow only the service user to execute the ipfs binary
             /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
@@ -292,8 +294,11 @@ Resources:
               ${VolumeIpfsPath}/config \
             > ${VolumeIpfsPath}/datastore_spec
 
-            ## cleanup - uninstall jq
+            ## cleanup of jq and apt stuff
             /usr/bin/sudo /usr/bin/apt-get remove jq -y
+            /usr/bin/sudo /usr/bin/apt-get clean -y
+            /usr/bin/sudo /usr/bin/apt-get autoclean -y
+            /usr/bin/sudo /usr/bin/apt-get autoremove -y
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
@@ -301,7 +306,7 @@ Resources:
             ## make vol dirs accessible to the service user only - 7xx b/c vol
             /usr/bin/sudo /usr/bin/chmod -R 0700 /data
 
-            ## explicitely grantin vol file ownership to the systemd service user
+            ## explicitely grantin vol file ownership to the systemd srvc usr
             ipfs_files=$(/usr/bin/find /data/ipfs -type f)
             /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
 
