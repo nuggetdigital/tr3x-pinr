@@ -278,16 +278,22 @@ Resources:
             /usr/local/bin/ipfs init --profile server
 
             ## switchin the /blocks mount point to s3
+            temp_file=$(mktemp)
             /usr/bin/jq \
               '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"data","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
-              /data/ipfs/config \
-            > /data/ipfs/config
+              ${VolumeIpfsPath}/config \
+            > $temp_file
+            /usr/bin/cp $temp_file ${VolumeIpfsPath}/config
+            /usr/bin/rm $temp_file
 
             ## adjustin the datastore_spec
             /usr/bin/jq \
               '.Datastore.Spec' \
-              /data/ipfs/config \
-            > /data/ipfs/datastore_spec
+              ${VolumeIpfsPath}/config \
+            > ${VolumeIpfsPath}/datastore_spec
+
+            ## cleanup - uninstall jq
+            /usr/bin/sudo /usr/bin/apt-get remove jq -y
 
             ## grantin vol dir ownership to the systemd service user
             /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
