@@ -290,6 +290,9 @@ Resources:
               ${VolumeIpfsPath}/config \
             > $temp_file
 
+            ## swipin the ipfs repo in prep of the reinit
+            /usr/bin/sudo /usr/bin/rm -rf ${VolumeIpfsPath}/*
+
             ## reinit the repo from our custom config 
             /usr/local/bin/ipfs init $temp_file
             /usr/bin/rm $temp_file
