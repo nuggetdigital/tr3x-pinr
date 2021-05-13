@@ -1,8 +1,13 @@
-# ipfs-pinr
+```nofmt
 
-![gbedem kingdom](./gbedema21.PNG)
-
-***
+██╗██████╗ ███████╗███████╗      ██████╗ ██╗███╗   ██╗██████╗ 
+██║██╔══██╗██╔════╝██╔════╝      ██╔══██╗██║████╗  ██║██╔══██╗
+██║██████╔╝█████╗  ███████╗█████╗██████╔╝██║██╔██╗ ██║██████╔╝
+██║██╔═══╝ ██╔══╝  ╚════██║╚════╝██╔═══╝ ██║██║╚██╗██║██╔══██╗
+██║██║     ██║     ███████║      ██║     ██║██║ ╚████║██║  ██║
+╚═╝╚═╝     ╚═╝     ╚══════╝      ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+saucy serverlite ipfs service stashin' a s3 datastore 🌍🪐🛸
+```
 
 ## setup
 
@@ -33,9 +38,9 @@ then run `./keygen.sh` to generate a fresh ssh key pair and push its public key 
 
 note that the corresponding private key remains in your machine's `~/.ssh`
 
-***
-
 ## ops
+
+check the code to see what is actually happenin, tldr:
 
 ### `./deploy.sh`
 
@@ -49,8 +54,16 @@ sshs into the instance
 
 destroys the stack
 
-***
+## docs
 
 dss3 help
 
 https://github.com/ipfs/go-ds-s3/issues/17#issuecomment-521410390
+
+self ipfs 
+
+https://talk.fission.codes/t/a-loosely-written-guide-to-hosting-an-ipfs-node-on-aws/234
+
+http ipfs
+
+https://docs.ipfs.io/reference/http/api/#http-commands
