@@ -14,6 +14,18 @@ Parameters:
     Type: String
     Default: AWS::NoValue
 
+  HostedZoneId:
+    Description: Id of the hosted zone for the production account
+    Type: String
+    Default: AWS::NoValue
+
+  AcmCertArn:
+    Description: |
+      AWS ACM certificate ARN for the production environment
+      This certificate will be used to secure the alb & dist
+    Type: String
+    Default: AWS::NoValue
+
   # 4now default
   # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
   InstanceImage:
@@ -65,6 +77,11 @@ Parameters:
     Description: Default root object path used by the media CloudFront distribution
     AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
     Type: String
+
+Conditions:
+  IsProd: !Equals
+    - !Ref Environment
+    - prod
 
 Resources:
   Vpc:
@@ -395,7 +412,7 @@ Resources:
   DatastoreBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref AssetBucket
+      Bucket: !Ref DatastoreBucket
       PolicyDocument:
         Version: 2012-10-17
         Statement:
