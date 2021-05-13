@@ -234,7 +234,7 @@ Resources:
             export IPFS_PATH=${IpfsPath}
 
             ## initializin the ipfs repo with a server profile
-            /usr/local/bin/ipfs init --profile server
+            /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
 
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
