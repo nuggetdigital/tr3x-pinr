@@ -257,6 +257,19 @@ Resources:
             /usr/bin/sudo /usr/bin/apt-get autoclean -y
             /usr/bin/sudo /usr/bin/apt-get autoremove -y
 
+            ## grantin ipfs path ownership to the systemd service user
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu ${IpfsPath}
+
+            ## adjust the ipfs path access rights
+            /usr/bin/sudo /usr/bin/chmod -R 0700 ${IpfsPath}
+
+            ## explicitely grantin ipfs file ownership to the systemd svc usr
+            ipfs_files=$(/usr/bin/find ${IpfsPath} -type f)
+            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
+
+            ## make vol files accessible to the service user only
+            /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
+
             # setup a systemd service
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
