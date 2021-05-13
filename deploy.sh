@@ -83,4 +83,32 @@ else
   aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
 fi
 
+stacks="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"
+
+bucket_name="$( \
+  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"DatastoreBucketName\") | .OutputValue" <<< "$stacks" \
+)"
+
+aws s3 cp <<<"
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=utf-8>
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+<title>ipfs-pinr</title>
+</head>
+<body>
+<p>
+    ██╗██████╗ ███████╗███████╗      ██████╗ ██╗███╗   ██╗██████╗ 
+    ██║██╔══██╗██╔════╝██╔════╝      ██╔══██╗██║████╗  ██║██╔══██╗
+    ██║██████╔╝█████╗  ███████╗█████╗██████╔╝██║██╔██╗ ██║██████╔╝
+    ██║██╔═══╝ ██╔══╝  ╚════██║╚════╝██╔═══╝ ██║██║╚██╗██║██╔══██╗
+    ██║██║     ██║     ███████║      ██║     ██║██║ ╚████║██║  ██║
+    ╚═╝╚═╝     ╚═╝     ╚══════╝      ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+    saucy serverlite ipfs service stashin' a s3 datastore 🌍🪐🛸
+</p>
+</body>
+</html>
+" s3://$bucket_name/index.html
+
 echo "$STACK_NAME stack deployed"

@@ -381,7 +381,6 @@ Resources:
         - !Ref SubnetB
       Type: application
 
-#
   DatastoreBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -471,3 +470,6 @@ Outputs:
   LoadBalancerDomainName:
     Description: DNS name of the load balancer
     Value: !GetAtt LoadBalancer.DNSName
+  DatastoreBucketName:
+    Description: Datastore bucket name
+    Value: !Ref DatastoreBucket

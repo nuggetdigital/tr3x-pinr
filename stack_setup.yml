@@ -5,13 +5,15 @@ Resources:
     Type: AWS::IAM::User
     Properties:
       Policies:
-        - PolicyName: !Sub ${AWS::StackName}-policy
+        - PolicyName: !Sub ${AWS::StackName}-setup-policy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Sid: AllowFullEC2AndVPCAccess
+              - Sid: AllowFullEC2AndS3Access
                 Effect: Allow
-                Action: "ec2:*"
+                Action:
+                  - ec2:*
+                  - s3:*
                 Resource: "*"
 
   AccessKey:
