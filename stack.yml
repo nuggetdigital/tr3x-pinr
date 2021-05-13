@@ -1,9 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  # SnapshotId:
-  #   Description: EBS snapshot id on which to base the volume
-  #   Type: String
+  Environment:
+    Description: Application environment
+    Type: String
+    AllowedValues:
+      - test
+      - prod
+    Default: test
 
   # 4now default
   # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
@@ -22,41 +26,20 @@ Parameters:
     Type: String
     Default: ubuntu
 
+  IpfsPath:
+    Description: IPFS data dir path
+    Type: String
+    Default: /home/ubuntu/ipfs
+
   IpfsBinaryURL:
     Description: URL serving the ipfs binary incl the S3 datastore plugin
     Type: String
     Default: https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
 
-  VolumeIpfsPath:
-    Description: Data dir path on the EBS volume
-    Type: String
-    Default: /data/ipfs
-
-  Environment:
-    Description: Application environment
-    Type: String
-    AllowedValues:
-      - test
-      - prod
-    Default: test
-
-  VolumeSizeGiB:
-    Description: Size of the EBS volume in GiB
-    Type: Number
-    Default: 50
-
   InstanceType:
     Description: EC2 instance type
     Type: String
     Default: t2.nano
-
-  InstanceTenancy:
-    Description: EC2 instance tenancy type
-    Type: String
-    Default: default
-    AllowedValues:
-      - default
-      - dedicated
 
 Resources:
   Vpc:
@@ -72,7 +55,7 @@ Resources:
       CidrBlock: 172.26.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      InstanceTenancy: !Ref InstanceTenancy
+      InstanceTenancy: default
 
   SubnetA:
     Type: AWS::EC2::Subnet
@@ -206,23 +189,9 @@ Resources:
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
       SubnetId: !Ref SubnetA
-      Volumes:
-        - Device: /dev/xvdh # from: ssh into the instance & lsblk
-          VolumeId: !Ref Volume
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
-
-  Volume:
-    Type: AWS::EC2::Volume
-    Properties:
-      AvailabilityZone: !Sub ${AWS::Region}a
-      Encrypted: false
-      Iops: 3000
-      MultiAttachEnabled: false
-      Size: !Ref VolumeSizeGiB
-      # SnapshotId: !Ref SnapshotId
-      VolumeType: gp3
 
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -244,23 +213,8 @@ Resources:
             /usr/bin/sudo /usr/bin/apt-get update -y
             /usr/bin/sudo /usr/bin/apt-get install jq -y
 
-            # mount & configure the ebs volume
-            ## configure the instance's block device
-            /usr/bin/sudo /usr/sbin/mkfs -t ext4 /dev/xvdh
-
-            ## make the volume root dir
-            /usr/bin/sudo /bin/mkdir /data
-
-            ## remount the volume on instance restarts
-            /usr/bin/echo -e \
-              "/dev/xvdh  /data  ext4  defaults,nofail,nobootwait  0  2" \
-            >> /etc/fstab
-
-            ## mount the volume
-            /usr/bin/sudo /bin/mount /dev/xvdh /data
-
             ## make the ipfs data dir
-            /bin/mkdir ${VolumeIpfsPath}
+            /bin/mkdir ${IpfsPath}
 
             # install the ipfs binary
             ## download the customized ipfs+dss3 binary
@@ -277,25 +231,25 @@ Resources:
             /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
 
             # setup ipfs
-            export IPFS_PATH=${VolumeIpfsPath}
+            export IPFS_PATH=${IpfsPath}
 
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --profile server
 
             ## interpolatin our custom s3 datastore for /blocks
-            temp_file=$(mktemp)
+            temp_conf=$(mktemp)
             /usr/bin/jq \
               -c \
               '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${DatastoreBucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
-              ${VolumeIpfsPath}/config \
-            > $temp_file
+              ${IpfsPath}/config \
+            > $temp_conf
 
             ## swipin the ipfs repo in prep of the reinit
-            /usr/bin/rm -rf ${VolumeIpfsPath}/*
+            /usr/bin/rm -rf ${IpfsPath}/*
 
             ## reinit the repo from our custom config 
-            /usr/local/bin/ipfs init $temp_file
-            /usr/bin/rm $temp_file
+            /usr/local/bin/ipfs init $temp_conf
+            /usr/bin/rm $temp_conf
 
             ## cleanup of jq and apt stuff
             /usr/bin/sudo /usr/bin/apt-get purge jq -y
@@ -303,42 +257,28 @@ Resources:
             /usr/bin/sudo /usr/bin/apt-get autoclean -y
             /usr/bin/sudo /usr/bin/apt-get autoremove -y
 
-            ## grantin vol dir ownership to the systemd service user
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu /data
-
-            ## make vol dirs accessible to the service user only - 7xx b/c vol
-            /usr/bin/sudo /usr/bin/chmod -R 0700 /data
-
-            ## explicitely grantin vol file ownership to the systemd srvc usr
-            ipfs_files=$(/usr/bin/find /data/ipfs -type f)
-            /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
-
-            ## make vol files accessible to the service user only
-            /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
-
             # setup a systemd service
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description=\"ipfs daemon\"
+              Description=\"ipfs daemon dumpin into a s3 datastore\"
               Wants=network-online.target
               After=network-online.target
               [Service]
               User=${ServiceUsername}
-              Environment=\"IPFS_PATH=${VolumeIpfsPath}\"
+              Environment=\"IPFS_PATH=${IpfsPath}\"
               ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
               Restart=on-failure
               RestartSec=1min
-              LimitNOFILE=8192
               [Install]
               WantedBy=multi-user.target
             " \
             > /etc/systemd/system/ipfs.service
 
-            ## enable the systemd service
+            ## enable the daemon
             /usr/bin/sudo /bin/systemctl enable ipfs.service
 
-            ## start the systemd service
+            ## start the daemon
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
   DatastoreBucket:
@@ -415,6 +355,3 @@ Outputs:
   LoadBalancerDomainName:
     Description: DNS name of the load balancer
     Value: !GetAtt LoadBalancer.DNSName
-  VolumeId:
-    Description: Id of the EBS volume
-    Value: !Ref Volume
