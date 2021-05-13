@@ -58,25 +58,11 @@ Parameters:
     Type: String
     Default: t3.nano
 
-  DatastoreBucketCdnDefaultTtl:
-    Description: Default cache object TTL - default 1h
-    Type: Number
-    Default: 3600
-
-  DatastoreBucketCdnMaxTtl:
-    Description: Maximum cache object TTL - default 2h
-    Type: Number
-    Default: 7200
-
-  DatastoreBucketCdnMinTtl:
-    Description: Minimum cache object TTL - default 1/2h
-    Type: Number
-    Default: 1800
-
-  DatastoreBucketCdnDefaultRootObject:
+  DistributionDefaultRootObject:
     Description: Default root object path used by the media CloudFront distribution
     AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
     Type: String
+    Default: index.html
 
 Conditions:
   IsProd: !Equals
@@ -210,13 +196,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:ListBucket
-                Resource: !GetAtt DatastoreBucket.Arn
+                Resource: !GetAtt Bucket.Arn
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:GetObject
                   - s3:DeleteObject
-                Resource: !Sub arn:aws:s3:::${DatastoreBucket}/*
+                Resource: !Sub arn:aws:s3:::${Bucket}/*
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -226,7 +212,7 @@ Resources:
         - !Ref InstanceRole
 
   Instance:
-    DependsOn: DatastoreBucket
+    DependsOn: Bucket
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
@@ -282,7 +268,7 @@ Resources:
             temp_conf=$(mktemp)
             /usr/bin/jq \
               -c \
-              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${DatastoreBucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
+              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${Bucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
               ${IpfsPath}/config \
             > $temp_conf
 
@@ -398,34 +384,34 @@ Resources:
         - !Ref SubnetB
       Type: application
 
-  DatastoreBucket:
+  Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-datastore-bucket
 
-  DatastoreBucketOriginAccessIdentity:
+  BucketOriginAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub cloudfront-${DatastoreBucket}-origin-access-identity
+        Comment: !Sub cloudfront-${Bucket}-origin-access-identity
 
-  DatastoreBucketPolicy:
+  BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref DatastoreBucket
+      Bucket: !Ref Bucket
       PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Sid: AllowOriginAccessIdentity
             Effect: Allow
             Principal:
-              CanonicalUser: !GetAtt DatastoreBucketOriginAccessIdentity.S3CanonicalUserId
+              CanonicalUser: !GetAtt BucketOriginAccessIdentity.S3CanonicalUserId
             Action:
               - s3:Get*
               - s3:List*
             Resource:
-              - !Sub arn:aws:s3:::${DatastoreBucket}
-              - !Sub arn:aws:s3:::${DatastoreBucket}/*
+              - !Sub arn:aws:s3:::${Bucket}
+              - !Sub arn:aws:s3:::${Bucket}/*
 
   Distribution:
     Type: AWS::CloudFront::Distribution
@@ -447,19 +433,19 @@ Resources:
           # cache policy name is Managed-CachingOptimized
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
           Compress: true
-          TargetOriginId: !Sub ${DatastoreBucket}-origin
+          TargetOriginId: !Sub ${Bucket}-origin
           ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: index.html
+        DefaultRootObject: !Ref DistributionDefaultRootObject
         Enabled: true
         HttpVersion: http2 # max http version
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
         # alias record which carries along extra cost
         IPV6Enabled: false
         Origins:
-          - DomainName: !GetAtt DatastoreBucket.DomainName
-            Id: !Sub ${DatastoreBucket}-origin
+          - DomainName: !GetAtt Bucket.DomainName
+            Id: !Sub ${Bucket}-origin
             S3OriginConfig:
-              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${DatastoreBucketOriginAccessIdentity}
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${BucketOriginAccessIdentity}
         PriceClass: PriceClass_100
         ViewerCertificate: !If
           - IsProd
@@ -487,6 +473,6 @@ Outputs:
   LoadBalancerDomainName:
     Description: DNS name of the load balancer
     Value: !GetAtt LoadBalancer.DNSName
-  DatastoreBucketName:
+  BucketName:
     Description: Datastore bucket name
-    Value: !Ref DatastoreBucket
+    Value: !Ref Bucket
