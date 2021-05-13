@@ -476,3 +476,6 @@ Outputs:
   BucketName:
     Description: Datastore bucket name
     Value: !Ref Bucket
+  DistributionDomainName:
+    Description: Datastore bucket distribution domain name
+    Value: !GetAtt Distribution.DomainName
