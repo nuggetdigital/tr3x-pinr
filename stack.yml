@@ -273,7 +273,7 @@ Resources:
             # setup a systemd service
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description=\"ipfs daemon dumpin into a s3 datastore\"
+              Description=ipfs daemon dumpin into a s3 datastore
               Wants=network-online.target
               After=network-online.target
               [Service]
