@@ -185,13 +185,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:ListBucket
-                Resource: !GetAtt IpfsDatastoreBucket.Arn
+                Resource: !GetAtt DatastoreBucket.Arn
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:GetObject
                   - s3:DeleteObject
-                Resource: !Sub arn:aws:s3:::${IpfsDatastoreBucket}/*
+                Resource: !Sub arn:aws:s3:::${DatastoreBucket}/*
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -201,7 +201,7 @@ Resources:
         - !Ref InstanceRole
 
   Instance:
-    DependsOn: IpfsDatastoreBucket
+    DependsOn: DatastoreBucket
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
@@ -286,7 +286,7 @@ Resources:
             temp_file=$(mktemp)
             /usr/bin/jq \
               -c \
-              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${IpfsDatastoreBucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
+              '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${DatastoreBucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
               ${VolumeIpfsPath}/config \
             > $temp_file
 
@@ -341,7 +341,7 @@ Resources:
             ## start the systemd service
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
-  IpfsDatastoreBucket:
+  DatastoreBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-datastore-bucket
