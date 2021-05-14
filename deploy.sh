@@ -86,7 +86,7 @@ fi
 stacks="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"
 
 bucket_name="$( \
-  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"DatastoreBucketName\") | .OutputValue" <<< "$stacks" \
+  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"BucketName\") | .OutputValue" <<< "$stacks" \
 )"
 
 aws s3 cp <<<"
