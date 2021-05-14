@@ -435,7 +435,6 @@ Resources:
           TargetOriginId: !Sub ${Bucket}-origin
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: !Ref DistributionDefaultRootObject
-
         Enabled: true
         HttpVersion: http2 # max http version
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA

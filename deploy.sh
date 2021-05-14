@@ -89,10 +89,9 @@ bucket_name="$( \
   jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"BucketName\") | .OutputValue" <<< "$stacks" \
 )"
 
-temp_file=$(mktemp)
+temp_file=$(mktemp --suffix .html)
 
-echo '
-<!doctype html>
+echo '<!doctype html>
 <html lang=en>
 <head>
 <meta charset=utf-8>
@@ -110,10 +109,13 @@ echo '
     saucy serverlite ipfs service stashin a s3 datastore 🌍🌒🛸🪐
 </p>
 </body>
-</html>
-' > $temp_file
+</html>' \
+> $temp_file
 
-aws s3 cp $temp_file s3://$bucket_name/index.html
+aws s3 cp \
+  --content-type text/html \
+  --content-disposition inline \
+  $temp_file s3://$bucket_name/index.html
 
 rm $temp_file
 
