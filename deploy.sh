@@ -89,12 +89,14 @@ bucket_name="$( \
   jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"BucketName\") | .OutputValue" <<< "$stacks" \
 )"
 
-aws s3 cp <<<"
+temp_file=$(mktemp)
+
+echo '
 <!doctype html>
 <html lang=en>
 <head>
 <meta charset=utf-8>
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ipfs-pinr</title>
 </head>
 <body>
@@ -105,10 +107,14 @@ aws s3 cp <<<"
     ██║██╔═══╝ ██╔══╝  ╚════██║╚════╝██╔═══╝ ██║██║╚██╗██║██╔══██╗
     ██║██║     ██║     ███████║      ██║     ██║██║ ╚████║██║  ██║
     ╚═╝╚═╝     ╚═╝     ╚══════╝      ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-    saucy serverlite ipfs service stashin' a s3 datastore 🌍🪐🛸
+    saucy serverlite ipfs service stashin a s3 datastore 🌍🌒🛸🪐
 </p>
 </body>
 </html>
-" s3://$bucket_name/index.html
+' > $temp_file
+
+aws s3 cp $temp_file s3://$bucket_name/index.html
+
+rm $temp_file
 
 echo "$STACK_NAME stack deployed"
