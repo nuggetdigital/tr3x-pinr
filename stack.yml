@@ -12,19 +12,19 @@ Parameters:
   Domain:
     Description: Route53 domain once purchased
     Type: String
-    Default: AWS::NoValue
+    Default: 📭
 
   HostedZoneId:
     Description: Id of the hosted zone for the production account
     Type: String
-    Default: AWS::NoValue
+    Default: 🏠
 
   AcmCertArn:
     Description: |
       AWS ACM certificate ARN for the production environment
       This certificate will be used to secure the alb & dist
     Type: String
-    Default: AWS::NoValue
+    Default: 📃
 
   # 4now default
   # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
@@ -39,7 +39,7 @@ Parameters:
     Default: id_rsa_ipfs_pinr.pub
 
   ServiceUsername:
-    Description: Name for a separate linux user runnin the systemd ipfs service
+    Description: Name of the linux user designated to run the ipfs service
     Type: String
     Default: ubuntu
 
@@ -57,12 +57,6 @@ Parameters:
     Description: EC2 instance type
     Type: String
     Default: t3.nano
-
-  DistributionDefaultRootObject:
-    Description: Default root object path used by the media CloudFront distribution
-    AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
-    Type: String
-    Default: index.html
 
 Conditions:
   IsProd: !Equals
@@ -336,15 +330,14 @@ Resources:
           PathPatternConfig:
             Values:
               - /api/v0/add
-              - /api/v0/cat
       ListenerArn: !Ref ApiListener
       Priority: 1
 
   ApiListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      # Certificates: TODO
-      #   - CertificateArn: !GetAtt Certificate.Arn
+      # Certificates:
+      #   - CertificateArn: !Ref AcmCertArn
       DefaultActions:
         - FixedResponseConfig:
             StatusCode: 403
@@ -435,7 +428,6 @@ Resources:
           Compress: true
           TargetOriginId: !Sub ${Bucket}-origin
           ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: !Ref DistributionDefaultRootObject
         Enabled: true
         HttpVersion: http2 # max http version
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
@@ -462,7 +454,7 @@ Resources:
       Name: !Ref Domain
       Type: A
       AliasTarget:
-        # Below zone id is used for any CloudFront Distribution
+        # below zone id is used for any CloudFront Distribution
         HostedZoneId: Z2FDTNDATAQYW2
         DNSName: !GetAtt Distribution.DomainName
 
