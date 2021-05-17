@@ -15,7 +15,7 @@ test_add_a_file_200() {
   resp_head=$(mktemp)
   resp_body=$(mktemp)
 
-  echo "[DEBUG] http://$alb/api/v0/add?pin=false"
+  echo "[DEBUG] http://$alb/api/v0/add?pin=false" && echo "[_____]"
 
   curl \
     --progress-bar \
@@ -25,7 +25,7 @@ test_add_a_file_200() {
     -fL \
     http://$alb/api/v0/add?pin=false \
   > $resp_body
-  cat $resp_body
+  echo "[DEBUG]" && cat $resp_head && cat $resp_body && echo "[_____]"
   assert_status $resp_head 200
 
   cid=$(jq -r '.Hash' $resp_body)

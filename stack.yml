@@ -142,8 +142,8 @@ Resources:
           ToPort: 80
 
       SecurityGroupEgress:
-        - Description: !Sub ${AWS::StackName}-load-balancer-security-group-egress-mini-api
-          CidrIp: 172.26.160.0/19
+        - Description: !Sub ${AWS::StackName}-load-balancer-security-group-egress-instance
+          DestinationSecurityGroupId: !Ref InstanceSecurityGroup
           IpProtocol: tcp
           FromPort: 80
           ToPort: 80
