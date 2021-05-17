@@ -147,7 +147,7 @@ Resources:
           CidrIp: 0.0.0.0/0
           IpProtocol: tcp
           FromPort: 80
-          ToPort: 80
+          ToPort: 5001
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -171,8 +171,8 @@ Resources:
         - Description: !Sub ${AWS::StackName}-instance-security-group-ingress-load-balancer
           SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
           IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
+          FromPort: 5001
+          ToPort: 5001
 
       SecurityGroupEgress:
         - Description: !Sub ${AWS::StackName}-instance-security-group-egress-all
@@ -264,9 +264,6 @@ Resources:
 
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
-
-            ## remappin the api from the default (tcp) port 5001 to 80
-            /usr/local/bin/ipfs config Addresses.API /ip4/127.0.0.1/tcp/80
 
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
@@ -368,11 +365,11 @@ Resources:
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
       Name: !Sub ${AWS::StackName}-api-target-group
-      Port: 80
+      Port: 5001
       Protocol: HTTP
       Targets:
         - Id: !Ref Instance
-          Port: 80
+          Port: 5001
       TargetType: instance
       VpcId: !Ref Vpc
 
