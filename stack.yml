@@ -271,6 +271,9 @@ Resources:
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
 
+            ## remappin the api to all netifaces
+            /usr/local/bin/ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
             /usr/bin/jq \
