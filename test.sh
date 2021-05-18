@@ -14,18 +14,14 @@ test_add_a_file_200() {
 
   resp_head=$(mktemp)
   resp_body=$(mktemp)
-
-  echo "[DEBUG] http://$alb/api/v0/add?pin=false" && echo "[_____]"
-
+  echo "[DBG] http://$alb/api/v0/add?pin=false" && echo "[DBGEND]"
   curl \
-    --progress-bar \
-    -X POST \
     -F "file=@./fixture.wav" \
     -D "$resp_head" \
-    -fL \
+    -vL# \
     http://$alb/api/v0/add?pin=false \
   > $resp_body
-  echo "[DEBUG]" && cat $resp_head && cat $resp_body && echo "[_____]"
+  echo "[DBG]" && cat $resp_head && cat $resp_body && echo "[DBGEND]"
   assert_status $resp_head 200
 
   cid=$(jq -r '.Hash' $resp_body)
