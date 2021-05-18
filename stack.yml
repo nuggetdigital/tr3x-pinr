@@ -177,7 +177,7 @@ Resources:
         - Description: !Sub ${AWS::StackName}-instance-security-group-ingress-load-balancer
           SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
           IpProtocol: tcp
-          FromPort: 5001
+          FromPort: 80
           ToPort: 5001
 
       SecurityGroupEgress:
