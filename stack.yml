@@ -271,8 +271,12 @@ Resources:
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
 
-            ## remappin the api to all netifaces
-            /usr/local/bin/ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+            ## remappin the api to our public netiface
+            public_ip=$( \
+              /usr/bin/curl -sSf \
+                http://169.254.169.254/latest/meta-data/public-ipv4 \
+            )
+            /usr/local/bin/ipfs config Addresses.API /ip4/$public_ip/tcp/5001
 
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
