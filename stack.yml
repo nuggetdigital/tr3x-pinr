@@ -381,6 +381,8 @@ Resources:
       IpAddressType: ipv4
       Name: !Sub ${AWS::StackName}-load-balancer
       Scheme: internet-facing
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
       Subnets:
         - !Ref SubnetA
         - !Ref SubnetB
