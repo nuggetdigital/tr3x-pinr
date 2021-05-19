@@ -366,6 +366,13 @@ Resources:
   ApiTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /webui
+      HealthCheckPort: traffic-port # 5001
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
       Name: !Sub ${AWS::StackName}-api-target-group
       Port: 5001
       Protocol: HTTP
