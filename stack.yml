@@ -332,6 +332,19 @@ Resources:
             ## start the daemon
             /usr/bin/sudo /bin/systemctl start ipfs.service
 
+            ## hacky health check workaround
+            ## b/c aws alb needs a GET route but ipfs only accepts POSTs
+            for ((;;));
+            do  
+              if /usr/bin/curl -qsfX POST http://127.0.0.1:5001/api/v0/version > /dev/null;
+              then
+                status="200 OK"
+              else
+                status="500 KO"
+              fi
+              /usr/bin/echo -e "HTTP/1.1 $status\n\n" | /usr/bin/nc -l 0.0.0.0 5000 -q 1
+            done &
+
   ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -368,11 +381,12 @@ Resources:
     Properties:
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /webui
-      HealthCheckPort: traffic-port # 5001
+      HealthCheckPath: /
+      HealthCheckPort: "5000"
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 3
       Name: !Sub ${AWS::StackName}-api-target-group
       Port: 5001
       Protocol: HTTP
