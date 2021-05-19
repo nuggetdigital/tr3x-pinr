@@ -427,8 +427,20 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: AllowOriginAccessIdentity
-            Effect: Allow
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt InstanceRole.Arn
+            Action: s3:ListBucket
+            Resource: !GetAtt Bucket.Arn
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt InstanceRole.Arn
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+            Resource: !Sub arn:aws:s3:::${Bucket}/*
+          - Effect: Allow
             Principal:
               CanonicalUser: !GetAtt BucketOriginAccessIdentity.S3CanonicalUserId
             Action:
