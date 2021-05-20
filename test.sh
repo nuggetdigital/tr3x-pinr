@@ -41,7 +41,7 @@ test_get_a_file_200() {
   resp_body=$(mktemp)
 
   lurc \
-    -X GET \
+    -X POST \
     -D $resp_head \
     https://$cfd/api/v0/cat?arg=$cid \
   > $resp_body
