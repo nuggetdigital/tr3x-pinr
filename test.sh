@@ -37,7 +37,7 @@ test_get_a_file_200() {
   resp_head=$(mktemp)
   resp_body=$(mktemp)
 
-  lurc \
+  curl \
     -X POST \
     -D $resp_head \
     http://$alb/api/v0/cat?arg=$cid \
