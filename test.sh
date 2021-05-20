@@ -6,9 +6,6 @@ stacks="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"
 alb="$( \
   jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"LoadBalancerDomainName\") | .OutputValue" <<< "$stacks" \
 )"
-cfd="$( \
-  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"DistributionDomainName\") | .OutputValue" <<< "$stacks" \
-)"
 
 test_add_a_file_200() {
   printf "test_add_a_file_200\n"
@@ -43,7 +40,7 @@ test_get_a_file_200() {
   lurc \
     -X POST \
     -D $resp_head \
-    https://$cfd/api/v0/cat?arg=$cid \
+    http://$alb/api/v0/cat?arg=$cid \
   > $resp_body
   echo "[DBG]" && cat $resp_head && cat $resp_body && echo "[DBGEND]"
   assert_status $resp_head 200

@@ -9,8 +9,8 @@ Parameters:
       - prod
     Default: test
 
-  DistributionDomain:
-    Description: Route53 domain for the content distribution once purchased
+  Domain:
+    Description: Route53 domain once purchased
     Type: String
     Default: 📭
 
@@ -57,12 +57,6 @@ Parameters:
     Description: EC2 instance type
     Type: String
     Default: t3.nano
-
-  DistributionDefaultRootObject:
-    Description: Default root object path used by the media CloudFront distribution
-    AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
-    Type: String
-    Default: index.html
 
 Conditions:
   IsProd: !Equals
@@ -436,73 +430,6 @@ Resources:
               - s3:DeleteObject
             Resource: !Sub arn:aws:s3:::${Bucket}/*
 
-  Distribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Aliases: !If
-          - IsProd
-          - [!Ref DistributionDomain]
-          - []
-        DefaultCacheBehavior:
-          AllowedMethods:
-            - GET
-            - HEAD
-            - OPTIONS
-            - POST
-          CachedMethods:
-            - GET
-            - HEAD
-            - OPTIONS
-            - POST
-          Compress: True
-          DefaultTTL: 86400 # 24 hours
-          ForwardedValues:
-            Cookies:
-              Forward: none
-            # cache key includes the query string b/c that includes the cid
-            QueryString: true
-          MaxTTL: 31536000 # 365 days
-          MinTTL: 1
-          TargetOriginId: !Sub ${LoadBalancer.LoadBalancerName}-origin
-          ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: !Ref DistributionDefaultRootObject
-        Enabled: true
-        HttpVersion: http2 # max http version
-        # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
-        # alias record which carries along extra cost
-        IPV6Enabled: false
-        Origins:
-          - DomainName: !GetAtt LoadBalancer.DNSName
-            Id: !Sub ${LoadBalancer.LoadBalancerName}-origin
-            CustomOriginConfig:
-              HTTPPort: 80
-              # HTTPSPort: 443
-              OriginKeepaliveTimeout: 5
-              OriginReadTimeout: 30
-              OriginProtocolPolicy: http-only
-              # OriginSSLProtocols:
-              #   - TLSv1.2
-        PriceClass: PriceClass_100
-        ViewerCertificate: !If
-          - IsProd
-          - AcmCertificateArn: !Ref AcmCertArn
-            MinimumProtocolVersion: TLSv1.2_2018
-            SslSupportMethod: sni-only
-          - CloudFrontDefaultCertificate: true
-
-  DistributionRecordSet:
-    Condition: IsProd
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref DistributionDomain
-      Type: A
-      AliasTarget:
-        # below zone id is used for any CloudFront Distribution
-        HostedZoneId: Z2FDTNDATAQYW2
-        DNSName: !GetAtt Distribution.DomainName
-
 Outputs:
   InstancePublicIp:
     Description: Public ip of the node
@@ -513,6 +440,3 @@ Outputs:
   BucketName:
     Description: Datastore bucket name
     Value: !Ref Bucket
-  DistributionDomainName:
-    Description: Distribution domain name
-    Value: !GetAtt Distribution.DomainName
