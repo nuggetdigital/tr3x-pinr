@@ -9,23 +9,6 @@ Parameters:
       - prod
     Default: test
 
-  Domain:
-    Description: Route53 domain once purchased
-    Type: String
-    Default: 📭
-
-  HostedZoneId:
-    Description: Id of the hosted zone for the production account
-    Type: String
-    Default: 🏠
-
-  AcmCertArn:
-    Description: |
-      AWS ACM certificate ARN for the production environment
-      This certificate will be used to secure the alb & dist
-    Type: String
-    Default: 📃
-
   # 4now default
   # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
   InstanceImage:
