@@ -449,10 +449,12 @@ Resources:
             - GET
             - HEAD
             - OPTIONS
+            - POST
           CachedMethods:
             - GET
             - HEAD
             - OPTIONS
+            - POST
           Compress: True
           DefaultTTL: 86400 # 24 hours
           ForwardedValues:
