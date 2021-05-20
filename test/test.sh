@@ -14,7 +14,7 @@ test_add_a_file_200() {
   resp_body=$(mktemp)
 
   curl \
-    -F "file=@./fixture.wav" \
+    -F "file=@./celesta.wav" \
     -D "$resp_head" \
     -vL# \
     "http://$alb/api/v0/add?cid-version=1&hash=blake2b-256&pin=false" \
@@ -27,6 +27,8 @@ test_add_a_file_200() {
   assert_match "$cid" '^[a-z2-7]+=*$'
 
   assert_equal ${#cid} 62
+
+  assert_equal "$cid" $(<./celesta.cid) 
 }
 
 test_get_a_file_200() {
@@ -40,12 +42,12 @@ test_get_a_file_200() {
   curl \
     -X POST \
     -D $resp_head \
-    http://$alb/api/v0/cat?arg=$cid \
+    http://$alb/api/v0/cat?arg=$(<./celesta.cid) \
   > $resp_body
   echo "[DBG]" && cat $resp_head && cat $resp_body && echo "[DBGEND]"
   assert_status $resp_head 200
 
-  assert_files_equal $resp_body ./fixture.wav
+  assert_files_equal $resp_body ./celesta.wav
 }
 
 test_add_a_file_twice_200() {
