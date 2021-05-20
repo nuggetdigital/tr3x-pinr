@@ -15,7 +15,7 @@ test_add_a_file_200() {
 
   resp_head=$(mktemp)
   resp_body=$(mktemp)
-  echo "[DBG] http://$alb/api/v0/add?pin=false" && echo "[DBGEND]"
+
   curl \
     -F "file=@./fixture.wav" \
     -D "$resp_head" \
@@ -43,7 +43,7 @@ test_get_a_file_200() {
   lurc \
     -X GET \
     -D $resp_head \
-    https://$cfd/content/$cid \
+    https://$cfd/api/v0/cat?arg=$cid \
   > $resp_body
   echo "[DBG]" && cat $resp_head && cat $resp_body && echo "[DBGEND]"
   assert_status $resp_head 200
