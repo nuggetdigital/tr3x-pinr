@@ -20,7 +20,7 @@ test_add_a_file_200() {
     -F "file=@./fixture.wav" \
     -D "$resp_head" \
     -vL# \
-    "http://$alb/api/v0/add?cid-version=1&hash=blake2b-256&pin=true" \
+    "http://$alb/api/v0/add?cid-version=1&hash=blake2b-256&pin=false" \
   > $resp_body
   echo "[DBG]" && cat $resp_head && cat $resp_body && echo "[DBGEND]"
   assert_status $resp_head 200
