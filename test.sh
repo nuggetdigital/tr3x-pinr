@@ -52,6 +52,6 @@ test_add_a_file_twice_200() {
   printf "NOT IMPLEMENTED: test_add_a_file_twice_200\n"
 }
 
-test_only_api_add_exposed() {
-   printf "NOT IMPLEMENTED: test_only_api_add_exposed\n"
+test_api_shield() {
+   printf "NOT IMPLEMENTED: test_api_shield\n"
 }
