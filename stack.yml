@@ -251,6 +251,14 @@ Resources:
             ## remappin the api to our public netiface
             /usr/local/bin/ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
 
+            ## allow cors
+            /usr/local/bin/ipfs config \
+              --json \
+              API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+            /usr/local/bin/ipfs config \
+              --json \
+              API.HTTPHeaders.Access-Control-Allow-Methods '["GET","HEAD","POST","OPTIONS"]'
+
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
             /usr/bin/jq \
