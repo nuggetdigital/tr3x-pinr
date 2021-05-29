@@ -200,6 +200,11 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !Sub ${AWS::Region}a
+      CreditSpecification:
+        # monthly t3.nano cost given "standard" cpu credits
+        # $0.0052 * 24 * 30 = $3.744
+        # beware: "unlimited" would increase monthly cost by a factor gt 10
+        CPUCredits: standard
       SubnetId: !Ref SubnetA
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
