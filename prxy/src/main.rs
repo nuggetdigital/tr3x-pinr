@@ -3,9 +3,10 @@ extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 mod util;
+use std::convert::Infallible;
 use hyper::{
     service::{make_service_fn, service_fn},
-    Client, Error, Method, Server,
+    Client, Error, Method, Server, StatusCode
 };
 use util::{crop, looks_like_cid};
 
@@ -31,10 +32,12 @@ async fn main() {
     let make_service = make_service_fn(move |_| {
         let client = client.clone();
 
+        // async move { Ok::<_, Infallible>(service_fn(move |req| proxy(client.clone(), req))) }
+
         async move {
             // `service_fn` is a helper to convert a function that
             // returns a Response into a `Service`.
-            Ok::<_, Error>(service_fn(move |mut req| {
+            Ok::<_, Infallible>(service_fn(async move |mut req| {
                 let req_path = req.uri().path();
                 let req_meth = req.method();
                 let path_part = crop(req_path, 1);
@@ -49,6 +52,7 @@ async fn main() {
                         let uri = uri_string.parse().expect("uri");
                         *req.uri_mut() = uri;
                         *req.method_mut() = Method::POST;
+                        client.request(req).await
                     }
                     (&Method::GET, "/status") => {
                         debug!("STATUS ARM");
@@ -59,6 +63,7 @@ async fn main() {
                         let uri = uri_string.parse().expect("uri");
                         *req.uri_mut() = uri;
                         *req.method_mut() = Method::POST;
+                        client.request(req).await
                     }
                     (&Method::POST, "/") => {
                         debug!("ADD ARM");
@@ -68,21 +73,26 @@ async fn main() {
                         );
                         let uri = uri_string.parse().expect("uri");
                         *req.uri_mut() = uri;
+                        client.request(req).await
                     }
                     _ => {
                         warn!("FELL THRU");
-                        // NOTE: duno how2 cnstrct a res fut so redirectin 2a deadend
-                        let uri_string = format!(
-                            "http://127.0.0.1:{}/api/v0/deadend",
-                            to_port
-                        );
-                        let uri = uri_string.parse().expect("uri");
-                        *req.uri_mut() = uri;
-                        *req.method_mut() = Method::POST;
+                        // // NOTE: duno how2 cnstrct a res fut so redirectin 2a deadend
+                        // let uri_string = format!(
+                        //     "http://127.0.0.1:{}/api/v0/deadend",
+                        //     to_port
+                        // );
+                        // let uri = uri_string.parse().expect("uri");
+                        // *req.uri_mut() = uri;
+                        // *req.method_mut() = Method::POST;
+                        Ok(Response::builder()
+                        .status(StatusCode::NOT_FOUND)
+                        .body(())
+                        .unwrap())
                     }
                 };
 
-                client.request(req)
+                // client.request(req).await
 
                 // TODO: strip unnecessary response headers
                 // server, trailer, vary, date
