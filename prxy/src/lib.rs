@@ -42,8 +42,14 @@ pub fn parse_uri(s: String) -> Uri {
     s.parse().expect("uri")
 }
 
-// TODO: strip unnecessary response headers
-// server, trailer, vary, date
+#[inline]
+fn strip_headers(mut res: Response<Body>) -> Response<Body> {
+    (*res.headers_mut()).remove("Server");
+    (*res.headers_mut()).remove("Trailer");
+    (*res.headers_mut()).remove("Vary");
+    res
+}
+
 pub async fn proxy(
     client: HttpClient,
     mut req: Request<Body>,
@@ -61,7 +67,8 @@ pub async fn proxy(
                 to_port, path_part
             ));
             *req.method_mut() = Method::POST;
-            client.request(req).await
+            let res = client.request(req).await?;
+            Ok(strip_headers(res))
         }
         (&Method::GET, "/status") => {
             debug!("STATUS ARM");
@@ -70,7 +77,8 @@ pub async fn proxy(
                 to_port
             ));
             *req.method_mut() = Method::POST;
-            client.request(req).await
+            let res = client.request(req).await?;
+            Ok(strip_headers(res))
         }
         (&Method::POST, "/") => {
             debug!("ADD ARM");
@@ -78,7 +86,8 @@ pub async fn proxy(
                 "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
                 to_port
             ));
-            client.request(req).await
+            let res = client.request(req).await?;
+            Ok(strip_headers(res))
         }
         _ => {
             warn!("FELL THRU");
