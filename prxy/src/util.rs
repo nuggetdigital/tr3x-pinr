@@ -1,6 +1,5 @@
-use lazy_regex::*;
-
-static NAIVE_CID_PATTERN: Lazy<Regex> = lazy_regex!("^[a-z2-7]{32,128}$");
+use lazy_static::lazy_static;
+use regex::Regex;
 
 pub fn crop(s: &str, n: usize) -> &str {
     if s.len() < n {
@@ -11,5 +10,8 @@ pub fn crop(s: &str, n: usize) -> &str {
 }
 
 pub fn looks_like_cid(part: &str) -> bool {
+    lazy_static! {
+        static ref NAIVE_CID_PATTERN: Regex = Regex::new("^[a-z2-7]{32,128}$").unwrap();
+    }
     NAIVE_CID_PATTERN.is_match(part)
 }

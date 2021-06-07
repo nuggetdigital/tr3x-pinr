@@ -1,16 +1,13 @@
 #![deny(warnings)]
 
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{Client, Error, Method, Response, Server, StatusCode};
-// use lazy_static::lazy_static;
-// use regex::Regex;
-use std::net::SocketAddr;
-// use lazy_regex::*;
-
 mod util;
-use util::{crop, looks_like_cid};
 
-// static NAIVE_CID_PATTERN: Lazy<Regex> = lazy_regex!("^ab+$"i);
+use hyper::{
+    service::{make_service_fn, service_fn},
+    Client, Error, Method, Server,
+};
+use std::net::SocketAddr;
+use util::{crop, looks_like_cid};
 
 #[tokio::main]
 async fn main() {
@@ -37,7 +34,7 @@ async fn main() {
                 let path_part = crop(req_path, 1);
 
                 match (req.method(), req_path) {
-                    (&Method::GET, req_path) if looks_like_cid(path_part) => {
+                    (&Method::GET, _req_path) if looks_like_cid(path_part) => {
                         let uri_string =
                             format!("http://{}/api/v0/cat?arg={}", out_addr_clone, path_part,);
                         // TODO rm unwrap
@@ -48,7 +45,12 @@ async fn main() {
                     }
                     (&Method::GET, "/status") => {
                         // TODO check ipfs-pinr is alive then 200/500
-                        Ok(Response::builder().status(StatusCode::NOT_FOUND))
+                        let uri_string = format!("http://{}/api/v0/version", out_addr_clone);
+                        // TODO rm unwrap
+                        let uri = uri_string.parse().unwrap();
+                        *req.uri_mut() = uri;
+                        *req.method_mut() = Method::POST;
+                        client.request(req)
                     }
                     (&Method::POST, "/") => {
                         let uri_string = format!(
@@ -61,8 +63,13 @@ async fn main() {
                         client.request(req)
                     }
                     _ => {
+                        // NOTE: duno how2 cnstrct a res fut so redirectin 2a deadend
+                        let uri_string = format!("http://{}/api/v0/notfound", out_addr_clone);
                         // TODO rm unwrap
-                        Ok(Response::builder().status(StatusCode::NOT_FOUND))
+                        let uri = uri_string.parse().unwrap();
+                        *req.uri_mut() = uri;
+                        *req.method_mut() = Method::POST;
+                        client.request(req)
                     }
                 }
             }))

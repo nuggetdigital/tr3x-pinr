@@ -286,29 +286,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
-name = "lazy-regex"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09d48478f4f51f92da5ffccc346cbd837f11d3421b3de3e2e35dcc537a0956b3"
-dependencies = [
- "lazy-regex-proc_macros",
- "once_cell",
- "regex",
-]
-
-[[package]]
-name = "lazy-regex-proc_macros"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47781c19aa24bbf46ea0c07306f89e710dcb2dc38895848bf328ca95fedd188b"
-dependencies = [
- "proc-macro2",
- "quote",
- "regex",
- "syn",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -485,7 +462,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "hyper",
- "lazy-regex",
+ "lazy_static",
  "pretty_env_logger",
  "regex",
  "tokio",
