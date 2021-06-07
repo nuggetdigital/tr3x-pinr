@@ -11,7 +11,8 @@ pub fn crop(s: &str, n: usize) -> &str {
 
 pub fn looks_like_cid(part: &str) -> bool {
     lazy_static! {
-        static ref NAIVE_CID_PATTERN: Regex = Regex::new("^[a-z2-7]{32,128}$").unwrap();
+        static ref NAIVE_CID_PATTERN: Regex =
+            Regex::new("^[a-z2-7]{32,128}$").unwrap();
     }
     NAIVE_CID_PATTERN.is_match(part)
 }

@@ -463,6 +463,7 @@ dependencies = [
  "futures",
  "hyper",
  "lazy_static",
+ "log",
  "pretty_env_logger",
  "regex",
  "tokio",
