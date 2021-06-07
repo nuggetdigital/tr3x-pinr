@@ -7,6 +7,7 @@ export PRXY_TO_PORT=5001
 export RUST_LOG=trace
 export IPFS_PATH=./sandbox
 
+cargo build --release
 cargo run --release &
 rm -rf $IPFS_PATH/*
 ipfs init -p server,lowpower
