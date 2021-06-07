@@ -48,7 +48,7 @@ async fn main() {
                     }
                     (&Method::GET, "/status") => {
                         // TODO check ipfs-pinr is alive then 200/500
-                        Ok(Response::builder().status(StatusCode::NOT_FOUND).unwrap())
+                        Ok(Response::builder().status(StatusCode::NOT_FOUND))
                     }
                     (&Method::POST, "/") => {
                         let uri_string = format!(
@@ -62,9 +62,9 @@ async fn main() {
                     }
                     _ => {
                         // TODO rm unwrap
-                        Ok(Response::builder().status(StatusCode::NOT_FOUND).unwrap())
+                        Ok(Response::builder().status(StatusCode::NOT_FOUND))
                     }
-                };
+                }
             }))
         }
     });
