@@ -22,11 +22,14 @@ async fn main() {
         .parse::<u16>()
         .unwrap_or(5001);
 
-    let client_main = Client::new();
+    let client = Client::builder()
+        .http1_title_case_headers(true)
+        .http1_preserve_header_case(true)
+        .build_http();
 
     // the `make_service_fn` closure is run for each connection...
     let make_service = make_service_fn(move |_| {
-        let client = client_main.clone();
+        let client = client.clone();
 
         async move {
             // `service_fn` is a helper to convert a function that
