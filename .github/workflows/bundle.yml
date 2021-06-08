@@ -42,7 +42,7 @@ jobs:
           name: release_upload_url
           path: ./release_upload_url.txt
 
-  bundle:
+  bundle_ipfs_pinr:
     needs: prerelease
     runs-on: ubuntu-20.04
     steps:
@@ -109,4 +109,58 @@ jobs:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./ipfs.gz
           asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-${{ env.DSS3_VERSION }}-x86_64-unknown-linux-gnu.gz
+          asset_content_type: application/gzip
+
+  bundle_ipfs_pinr_prxy:
+    needs: prerelease
+    runs-on: ubuntu-20.04
+    steps:
+      - name: get the current version tag for ipfs-pinr
+        run: |
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
+          echo "GO_IPFS_TAG=$pushed_tag" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v2.3.4
+
+      - name: make sure a correct rust version is installed
+        uses: hecrj/setup-rust-action@v1.3.4
+        with:
+          rust-version: "1.52.1"
+
+      - name: build ipfs-pinr-prxy
+        run: cargo build --release --manifest-path=./prxy/Cargo.toml
+
+      - name: gzipup the prxy binary
+        run: gzip -c ./prxy/target/release/prxy > ./prxy.gz
+
+      - name: sha256sum the gzipd prxy binary
+        run: sha256sum -b ./prxy.gz | grep -oE '^[a-f0-9]+' > ./prxy.gz.sha256sum
+
+      - name: download the release upload url artifact
+        uses: actions/download-artifact@v2.0.8
+        with:
+          name: release_upload_url
+
+      - name: set the release upload url as an env var
+        run: echo "RELEASE_UPLOAD_URL=$(<./release_upload_url.txt)" >> $GITHUB_ENV
+
+      - name: upload the prxy sha256sum
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+          asset_path: ./prxy.gz.sha256sum
+          asset_name: ipfs-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz.sha256sum
+          asset_content_type: application/gzip
+
+      - name: upload the prebuilt prxy binary
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+          asset_path: ./prxy.gz
+          asset_name: ipfs-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz
           asset_content_type: application/gzip
