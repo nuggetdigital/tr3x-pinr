@@ -1,12 +1,15 @@
-use hyper::{Body, Client, Method, Request, Response, StatusCode, Uri};
+use hyper::{
+    client::HttpConnector, Body, Client, Method, Request, Response, StatusCode,
+    Uri,
+};
 use lazy_static::lazy_static;
 use log::{debug, warn};
 use regex::Regex;
 
-type HttpClient = Client<hyper::client::HttpConnector>;
+type HttpClient = Client<HttpConnector>;
 
 #[inline]
-pub fn rm_first_char(s: &str) -> &str {
+fn rm_first_char(s: &str) -> &str {
     if s.len() <= 1 {
         ""
     } else {
@@ -15,12 +18,28 @@ pub fn rm_first_char(s: &str) -> &str {
 }
 
 #[inline]
-pub fn looks_like_cid(part: &str) -> bool {
+fn looks_like_cid(part: &str) -> bool {
     lazy_static! {
         static ref NAIVE_CID_PATTERN: Regex =
-            Regex::new("^[a-z2-7]{32,128}$").unwrap();
+            Regex::new("^[a-z2-7]{32,128}$").expect("naive cid pattern");
     }
     NAIVE_CID_PATTERN.is_match(part)
+}
+
+#[inline]
+fn parse_uri(s: String) -> Uri {
+    s.parse().expect("uri")
+}
+
+#[inline]
+fn strip_headers(mut res: Response<Body>) -> Response<Body> {
+    let hdrs = res.headers_mut();
+    hdrs.remove("Server");
+    hdrs.remove("Trailer");
+    hdrs.remove("Vary");
+    hdrs.remove("Access-Control-Allow-Headers");
+    hdrs.remove("Access-Control-Expose-Headers");
+    res
 }
 
 #[inline]
@@ -35,19 +54,6 @@ pub fn parse_ports() -> (u16, u16) {
             .parse::<u16>()
             .unwrap_or(5001),
     )
-}
-
-#[inline]
-pub fn parse_uri(s: String) -> Uri {
-    s.parse().expect("uri")
-}
-
-#[inline]
-fn strip_headers(mut res: Response<Body>) -> Response<Body> {
-    (*res.headers_mut()).remove("Server");
-    (*res.headers_mut()).remove("Trailer");
-    (*res.headers_mut()).remove("Vary");
-    res
 }
 
 pub async fn proxy(

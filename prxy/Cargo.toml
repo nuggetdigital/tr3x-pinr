@@ -5,9 +5,9 @@ authors = ["chiefbiiko <noah.anabiik.schwarz@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-hyper = { version = "0.14", features = ["full"] }
-tokio = { version = "1", features = ["full"] }
-futures = "0.3"
+hyper = { version = "0.14.9", features = ["tcp", "http1", "client", "server"] }
+tokio = { version = "1.6.1", features = ["full"] }
+futures = "0.3.15"
 lazy_static = "1.4.0"
 regex = "1.5.4"
 log = "0.4.14"
