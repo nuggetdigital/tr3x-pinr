@@ -398,8 +398,8 @@ Resources:
       HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 1
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 2
       Name: !Sub ${AWS::StackName}-api-target-group
       Port: !Ref TrafficPort
       Protocol: HTTP
