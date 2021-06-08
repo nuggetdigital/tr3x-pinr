@@ -1,9 +1,10 @@
 use hyper::{
-    body, client::HttpConnector, Body, Client, Method, Request, Response,
-    StatusCode, Uri,
+    body as hyper_body, client::HttpConnector, Body as HyperBody, Client,
+    Error, Method, Request, Response, StatusCode, Uri,
 };
-use hyper_multipart_rfc7578::client::multipart;
+use hyper_multipart_rfc7578::client::multipart::{Body as MultiBody, Form};
 use lazy_static::lazy_static;
+use log::debug;
 use regex::Regex;
 use std::io::Cursor;
 
@@ -31,7 +32,7 @@ fn parse_uri(s: String) -> Uri {
 }
 
 #[inline]
-fn strip_headers(mut res: Response<Body>) -> Response<Body> {
+fn strip_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
     let hdrs = res.headers_mut();
     hdrs.remove("Server");
     hdrs.remove("Trailer");
@@ -56,14 +57,14 @@ pub fn parse_ports() -> (u16, u16) {
 }
 
 async fn to_formdata_request(
-    req: Request<Body>,
+    req: Request<HyperBody>,
     to_port: u16,
-) -> Result<Request<Body>, hyper::Error> {
-    let mut form = multipart::Form::default();
+) -> Result<Request<HyperBody>, Error> {
+    let mut form = Form::default();
 
     form.add_reader(
         "file",
-        Cursor::new(body::to_bytes(req.into_body()).await?),
+        Cursor::new(hyper_body::to_bytes(req.into_body()).await?),
     );
 
     let uri = parse_uri(format!(
@@ -73,7 +74,7 @@ async fn to_formdata_request(
 
     // TODO: get rid of expect
     let formdata_req = form
-        .set_body_convert::<hyper::Body, multipart::Body>(Request::post(uri))
+        .set_body_convert::<HyperBody, MultiBody>(Request::post(uri))
         .expect("formdata req");
 
     Ok(formdata_req)
@@ -81,21 +82,26 @@ async fn to_formdata_request(
 
 pub async fn proxy(
     client: Client<HttpConnector>,
-    mut req: Request<Body>,
+    mut req: Request<HyperBody>,
     to_port: u16,
-) -> Result<Response<Body>, hyper::Error> {
+) -> Result<Response<HyperBody>, Error> {
     let req_path = req.uri().path();
     let req_meth = req.method();
     let path_part = rm_first_char(req_path);
 
+    debug!("incomin {:?}", &req);
+
     match (req_meth, req_path) {
         (&Method::GET, _req_path) if looks_like_cid(path_part) => {
-            *req.uri_mut() = parse_uri(format!(
+            let uri = parse_uri(format!(
                 "http://127.0.0.1:{}/api/v0/cat?arg={}",
                 to_port, path_part
             ));
-            *req.method_mut() = Method::POST;
-            let res = client.request(req).await?;
+            // TODO: get rid of expect
+            let alt_req = Request::post(uri)
+                .body(HyperBody::empty())
+                .expect("alt req");
+            let res = client.request(alt_req).await?;
             Ok(strip_headers(res))
         }
         (&Method::GET, "/status") => {
@@ -113,7 +119,7 @@ pub async fn proxy(
             Ok(strip_headers(res))
         }
         _ => {
-            let mut resp = Response::new(Body::empty());
+            let mut resp = Response::new(HyperBody::empty());
             *resp.status_mut() = StatusCode::NOT_FOUND;
             Ok(resp)
         }

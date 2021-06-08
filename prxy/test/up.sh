@@ -14,12 +14,13 @@ set -Eeu
 mkdir -p $IPFS_PATH
 rm -rf $IPFS_PATH/*
 
-curl --proto '=https' --tlsv1.2 -fsSL \
-  https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz \
-| gunzip \
-> $wd/sandbox/ipfs
-
-chmod +x $wd/sandbox/ipfs
+if [[ ! -x $wd/sandbox/ipfs ]]; then
+  curl --proto '=https' --tlsv1.2 -fsSL \
+    https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz \
+  | gunzip \
+  > $wd/sandbox/ipfs
+  chmod +x $wd/sandbox/ipfs
+fi
 
 $wd/sandbox/ipfs init -p server,lowpower
 
