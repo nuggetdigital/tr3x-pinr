@@ -31,6 +31,9 @@ CHANGE_SET_NAME=$STACK_NAME-change-set-$(date +%s)
 
 SSH_USERNAME=ubuntu
 SSH_PRIVATE_KEY_NAME=id_rsa_ipfs_pinr
+
+PRXY_FROM_PORT=5000
+PRXY_TO_PORT=5001
 ```
 
 then run `./keygen.sh` to generate a fresh ssh key pair and push its public key to ec2
