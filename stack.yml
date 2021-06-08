@@ -36,10 +36,20 @@ Parameters:
     Type: String
     Default: https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
 
+  PrxyBinaryURL:
+    Description: URL serving the ipfs pinr prxy binary
+    Type: String
+    Default: https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/ipfs-pinr-prxy-v0.8.0-x86_64-unknown-linux-gnu.gz
+
   InstanceType:
     Description: EC2 instance type
     Type: String
     Default: t3.nano
+
+  TrafficPort:
+    Description: EC2 traffic port - the port that the ipfs pinr prxy listens on
+    Type: Number
+    Default: 5000
 
 Conditions:
   IsProd: !Equals
@@ -130,7 +140,7 @@ Resources:
           CidrIp: 0.0.0.0/0
           IpProtocol: tcp
           FromPort: 80
-          ToPort: 5001
+          ToPort: !Ref TrafficPort
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -155,7 +165,7 @@ Resources:
           SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
           IpProtocol: tcp
           FromPort: 80
-          ToPort: 5001
+          ToPort: !Ref TrafficPort
 
       SecurityGroupEgress:
         - Description: !Sub ${AWS::StackName}-instance-security-group-egress-all
@@ -233,28 +243,34 @@ Resources:
             ## make the ipfs data dir
             /bin/mkdir ${IpfsPath}
 
-            # install the ipfs binary
+            # install the ipfs binaries
             ## download the customized ipfs+dss3 binary
             /usr/bin/curl -fsSL ${IpfsBinaryURL} \
             | /usr/bin/gunzip \
             > /usr/local/bin/ipfs
 
-            ## grant ipfs binary ownership to the service user
+            ## download the ipfs-pinr-prxy binary
+            /usr/bin/curl -fsSL ${PrxyBinaryURL} \
+            | /usr/bin/gunzip \
+            > /usr/local/bin/prxy
+
+            ## grant ipfs binaries ownership to the service user
             /usr/bin/sudo /usr/bin/chown \
               ${ServiceUsername}:ubuntu \
-              /usr/local/bin/ipfs
+              /usr/local/bin/ipfs \
+              /usr/local/bin/prxy
 
             ## allow only the service user to execute the ipfs binary
-            /usr/bin/sudo /bin/chmod 0700 /usr/local/bin/ipfs
+            /usr/bin/sudo /bin/chmod \
+              0700 \
+              /usr/local/bin/ipfs \
+              /usr/local/bin/prxy
 
             # setup ipfs
             export IPFS_PATH=${IpfsPath}
 
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
-
-            ## remappin the api to our public netiface
-            /usr/local/bin/ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
 
             ## allow cors
             /usr/local/bin/ipfs config \
@@ -298,10 +314,11 @@ Resources:
             ## make vol files accessible to the service user only
             /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
 
-            # setup a systemd service
+            # setup systemd services
+            ## the ipfs pinr daemon
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description=ipfs daemon dumpin into a s3 datastore
+              Description=ipfs pinr daemon
               Wants=network-online.target
               After=network-online.target
               [Service]
@@ -316,24 +333,30 @@ Resources:
             " \
             > /etc/systemd/system/ipfs.service
 
-            ## enable the daemon
+            ## and the ipfs pinr prxy
+            /usr/bin/sudo /usr/bin/echo -e "
+              [Unit]
+              Description=ipfs pinr prxy
+              Wants=network-online.target
+              After=network-online.target
+              [Service]
+              User=${ServiceUsername}
+              ExecStart=/usr/local/bin/prxy
+              Type=simple
+              Restart=on-failure
+              RestartSec=1min
+              [Install]
+              WantedBy=multi-user.target
+            " \
+            > /etc/systemd/system/prxy.service
+
+            ## enable the daemons
             /usr/bin/sudo /bin/systemctl enable ipfs.service
+            /usr/bin/sudo /bin/systemctl enable prxy.service
 
             ## start the daemon
             /usr/bin/sudo /bin/systemctl start ipfs.service
-
-            ## hacky health check workaround
-            ## b/c aws alb needs a GET route but ipfs only accepts POSTs
-            for ((;;));
-            do  
-              if /usr/bin/curl -qsfX POST http://127.0.0.1:5001/api/v0/version > /dev/null;
-              then
-                status="200 OK"
-              else
-                status="500 KO"
-              fi
-              /usr/bin/echo -e "HTTP/1.1 $status\n\n" | /usr/bin/nc -l 0.0.0.0 5000 -q 1
-            done &
+            /usr/bin/sudo /bin/systemctl start prxy.service
 
   ApiListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
@@ -348,8 +371,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - /api/v0/add
-              - /api/v0/cat
+              - /*
       ListenerArn: !Ref ApiListener
       Priority: 1
 
@@ -372,18 +394,18 @@ Resources:
     Properties:
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /
-      HealthCheckPort: "5000"
+      HealthCheckPath: /status
+      HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 5
-      UnhealthyThresholdCount: 3
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 1
       Name: !Sub ${AWS::StackName}-api-target-group
-      Port: 5001
+      Port: !Ref TrafficPort
       Protocol: HTTP
       Targets:
         - Id: !Ref Instance
-          Port: 5001
+          Port: !Ref TrafficPort
       TargetType: instance
       VpcId: !Ref Vpc
 

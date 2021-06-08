@@ -1,6 +1,6 @@
 [package]
 name = "prxy"
-version = "0.0.0"
+version = "0.8.0"
 authors = ["chiefbiiko <noah.anabiik.schwarz@gmail.com>"]
 edition = "2018"
 
