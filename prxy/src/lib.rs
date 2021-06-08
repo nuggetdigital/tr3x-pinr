@@ -3,10 +3,7 @@ use hyper::{
     Uri,
 };
 use lazy_static::lazy_static;
-use log::{debug, warn};
 use regex::Regex;
-
-type HttpClient = Client<HttpConnector>;
 
 #[inline]
 fn rm_first_char(s: &str) -> &str {
@@ -57,7 +54,7 @@ pub fn parse_ports() -> (u16, u16) {
 }
 
 pub async fn proxy(
-    client: HttpClient,
+    client: Client<HttpConnector>,
     mut req: Request<Body>,
     to_port: u16,
 ) -> Result<Response<Body>, hyper::Error> {
@@ -67,7 +64,6 @@ pub async fn proxy(
 
     match (req_meth, req_path) {
         (&Method::GET, _req_path) if looks_like_cid(path_part) => {
-            debug!("CAT ARM");
             *req.uri_mut() = parse_uri(format!(
                 "http://127.0.0.1:{}/api/v0/cat?arg={}",
                 to_port, path_part
@@ -77,7 +73,6 @@ pub async fn proxy(
             Ok(strip_headers(res))
         }
         (&Method::GET, "/status") => {
-            debug!("STATUS ARM");
             *req.uri_mut() = parse_uri(format!(
                 "http://127.0.0.1:{}/api/v0/version",
                 to_port
@@ -87,7 +82,6 @@ pub async fn proxy(
             Ok(strip_headers(res))
         }
         (&Method::POST, "/") => {
-            debug!("ADD ARM");
             *req.uri_mut() = parse_uri(format!(
                 "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
                 to_port
@@ -96,7 +90,6 @@ pub async fn proxy(
             Ok(strip_headers(res))
         }
         _ => {
-            warn!("FELL THRU");
             let mut resp = Response::new(Body::empty());
             *resp.status_mut() = StatusCode::NOT_FOUND;
             Ok(resp)

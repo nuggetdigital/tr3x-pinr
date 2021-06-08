@@ -34,8 +34,10 @@ async fn main() {
         }),
     );
 
-    info!("listening on http://localhost:{}", from_port);
-    info!("proxying to http://localhost:{}", to_port);
+    info!(
+        "prxy http://localhost:{} -> http://localhost:{}",
+        from_port, to_port
+    );
 
     if let Err(e) = server.await {
         error!("server error: {}", e);
