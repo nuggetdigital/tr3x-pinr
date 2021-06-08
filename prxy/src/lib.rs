@@ -1,6 +1,9 @@
 use hyper::{
-    body as hyper_body, client::HttpConnector, Body as HyperBody, Client,
-    Error, Method, Request, Response, StatusCode, Uri,
+    body as hyper_body,
+    client::HttpConnector,
+    header::{HeaderValue, CONTENT_TYPE},
+    Body as HyperBody, Client, Error, Method, Request, Response, StatusCode,
+    Uri,
 };
 use hyper_multipart_rfc7578::client::multipart::{Body as MultiBody, Form};
 use lazy_static::lazy_static;
@@ -39,6 +42,9 @@ fn strip_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
     hdrs.remove("Vary");
     hdrs.remove("Access-Control-Allow-Headers");
     hdrs.remove("Access-Control-Expose-Headers");
+    hdrs.remove("X-Content-Length");
+    hdrs.remove("X-Stream-Output");
+    hdrs.remove("X-Chunked-Output");
     res
 }
 
@@ -101,7 +107,11 @@ pub async fn proxy(
             let alt_req = Request::post(uri)
                 .body(HyperBody::empty())
                 .expect("alt req");
-            let res = client.request(alt_req).await?;
+            let mut res = client.request(alt_req).await?;
+            res.headers_mut().insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("application/octet-stream"),
+            );
             Ok(strip_headers(res))
         }
         (&Method::GET, "/status") => {
@@ -110,7 +120,8 @@ pub async fn proxy(
                 to_port
             ));
             *req.method_mut() = Method::POST;
-            let res = client.request(req).await?;
+            let mut res = client.request(req).await?;
+            *res.body_mut() = HyperBody::empty();
             Ok(strip_headers(res))
         }
         (&Method::POST, "/") => {
