@@ -16,7 +16,8 @@ test_add_a_file_200() {
   resp_body=$(mktemp)
 
   curl \
-    -F "file=@$wd/celesta.wav" \
+    -X POST \
+    --data-binary @$wd/celesta.wav \
     -D $resp_head \
     -vL# \
     http://$alb/ \
@@ -40,6 +41,7 @@ test_get_a_file_200() {
   cid=$(<$wd/celesta.cid)
 
   curl \
+    -X GET \
     -D $resp_head \
     -vL# \
     http://$alb/$cid \
