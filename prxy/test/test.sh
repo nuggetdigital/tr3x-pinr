@@ -13,9 +13,9 @@ test_add_a_file_200() {
   resp_head=$(mktemp)
   resp_body=$(mktemp)
 
-  # --data @$wd/celesta.wav \
+  # -F "file=@$wd/celesta.wav" \
   curl \
-    -F "file=@$wd/celesta.wav" \
+    --data @$wd/celesta.wav \
     -D $resp_head \
     -vL# \
     http://localhost:$PRXY_FROM_PORT/ \

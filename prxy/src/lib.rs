@@ -1,9 +1,11 @@
 use hyper::{
-    client::HttpConnector, Body, Client, Method, Request, Response, StatusCode,
-    Uri,
+    body, client::HttpConnector, Body, Client, Method, Request, Response,
+    StatusCode, Uri,
 };
+use hyper_multipart_rfc7578::client::multipart;
 use lazy_static::lazy_static;
 use regex::Regex;
+use std::io::Cursor;
 
 #[inline]
 fn rm_first_char(s: &str) -> &str {
@@ -53,6 +55,30 @@ pub fn parse_ports() -> (u16, u16) {
     )
 }
 
+async fn to_formdata_request(
+    req: Request<Body>,
+    to_port: u16,
+) -> Result<Request<Body>, hyper::Error> {
+    let mut form = multipart::Form::default();
+
+    form.add_reader(
+        "file",
+        Cursor::new(body::to_bytes(req.into_body()).await?),
+    );
+
+    let uri = parse_uri(format!(
+        "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
+        to_port
+    ));
+
+    // TODO: get rid of expect
+    let formdata_req = form
+        .set_body_convert::<hyper::Body, multipart::Body>(Request::post(uri))
+        .expect("formdata req");
+
+    Ok(formdata_req)
+}
+
 pub async fn proxy(
     client: Client<HttpConnector>,
     mut req: Request<Body>,
@@ -82,11 +108,8 @@ pub async fn proxy(
             Ok(strip_headers(res))
         }
         (&Method::POST, "/") => {
-            *req.uri_mut() = parse_uri(format!(
-                "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
-                to_port
-            ));
-            let res = client.request(req).await?;
+            let formdata_req = to_formdata_request(req, to_port).await?;
+            let res = client.request(formdata_req).await?;
             Ok(strip_headers(res))
         }
         _ => {
