@@ -490,9 +490,11 @@ Resources:
         DefaultCacheBehavior:
           AllowedMethods:
             - GET
+            - HEAD
             - OPTIONS
           CachedMethods:
             - GET
+            - HEAD
             - OPTIONS
           Compress: true
           ForwardedValues:
