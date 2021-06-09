@@ -21,6 +21,16 @@ aws cloudformation create-change-set \
   --change-set-name $CHANGE_SET_NAME \
   --change-set-type $change_set_type \
   --template-body file://stack.yml \
+  --parameters \
+    Environment=${{ env.ENVIRONMENT }} \
+    Subdomain=${{ env.SUBDOMAIN }} \
+    HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
+    AcmCertArn=${{ secrets.ACM_CERT_ARN }} \
+    CdnDefaultTtl=${{ env.CDN_DEFAULT_TTL }} \
+    CdnMaxTtl=${{ env.CDN_MAX_TTL }} \
+    CdnMinTtl=${{ env.CDN_MIN_TTL }} \
+    CdnDefaultRootObject=${{ env.CDN_DEFAULT_ROOT_OBJECT }} \
+    PseudoRandomness=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
   --capabilities CAPABILITY_NAMED_IAM
 
 aws cloudformation wait change-set-create-complete \

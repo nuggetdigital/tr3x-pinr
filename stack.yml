@@ -1,6 +1,19 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  Subdomain:
+    Description: Route53 subdomain
+    Type: String
+
+  HostedZoneId:
+    Description: Id of the subdomain hosted zone for the production account
+    Type: String
+
+  AcmCertArn:
+    Description: |
+      ARN of an ACM certificate for the prod distribution
+    Type: String
+
   Environment:
     Description: Application environment
     Type: String
@@ -8,6 +21,27 @@ Parameters:
       - test
       - prod
     Default: test
+
+  CdnDefaultTtl:
+    Description: Default cache object TTL
+    Type: Number
+    Default: 886400 # 1 day
+
+  CdnMaxTtl:
+    Description: Maximum cache object TTL
+    Type: Number
+    Default: 31536000 # 365 days
+
+  CdnMinTtl:
+    Description: Minimum cache object TTL
+    Type: Number
+    Default: 1
+
+  CdnDefaultRootObject:
+    Description: Default root object path used by the media CloudFront distribution
+    AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
+    Type: String
+    Default: index.html
 
   # 4now default
   # 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315
@@ -50,6 +84,11 @@ Parameters:
     Description: EC2 traffic port - the port that the ipfs pinr prxy listens on
     Type: Number
     Default: 5000
+
+  PseudoRandomness:
+    Description: Some pseudo randomness to append to bucket names
+    AllowedPattern: "^[^ ]{16,}$"
+    Type: String
 
 Conditions:
   IsProd: !Equals
@@ -427,6 +466,12 @@ Resources:
     Properties:
       BucketName: !Sub ${AWS::StackName}-datastore-bucket
 
+  LogsBucket:
+    Condition: IsProd
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-website-bucket-${PseudoRandomness}
+
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -447,6 +492,83 @@ Resources:
               - s3:GetObject
               - s3:DeleteObject
             Resource: !Sub arn:aws:s3:::${Bucket}/*
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases: !If
+          - IsProd
+          - [!Ref Subdomain]
+          - []
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - OPTIONS
+          Compress: true
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: false
+          DefaultTTL: !Ref CdnDefaultTtl
+          MaxTTL: !Ref CdnMaxTtl
+          MinTTL: !Ref CdnMinTtl
+          TargetOriginId: !Sub ${LoadBalancer.LoadBalancerName}-origin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: !Ref CdnDefaultRootObject
+        Enabled: true
+        HttpVersion: http2 # max http version
+        # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
+        # alias record which carries along extra cost
+        IPV6Enabled: false
+        Logging: !If
+          - IsProd
+          - Bucket: !Sub ${LogsBucket}.s3.amazonaws.com
+            IncludeCookies: false
+            Prefix: ""
+          - !Ref AWS::NoValue
+        Origins:
+          - DomainName: !GetAtt LoadBalancer.DNSName
+            Id: !Sub ${LoadBalancer.LoadBalancerName}-origin
+            CustomOriginConfig:
+              HTTPPort: !If
+                - IsProd
+                - !Ref AWS::NoValue
+                - 80
+              HTTPSPort: !If
+                - IsProd
+                - 443
+                - !Ref AWS::NoValue
+              OriginProtocolPolicy: !If
+                - IsProd
+                - https-only
+                - http-only
+              OriginSSLProtocols: !If
+                - IsProd
+                - - TLSv1.2
+                - !Ref AWS::NoValue
+        PriceClass: PriceClass_100
+        ViewerCertificate: !If
+          - IsProd
+          - AcmCertificateArn: !Ref AcmCertArn
+            MinimumProtocolVersion: TLSv1.2_2018
+            SslSupportMethod: sni-only
+          - CloudFrontDefaultCertificate: true
+
+  DistributionRecordSet:
+    Condition: IsProd
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref Subdomain
+      Type: A
+      AliasTarget:
+        # Below zone id is used for any CloudFront Distribution
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt Distribution.DomainName
 
 Outputs:
   InstancePublicIp:
