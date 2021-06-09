@@ -423,7 +423,7 @@ Resources:
       HealthCheckPath: /status
       HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 60
+      HealthCheckTimeoutSeconds: 59
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 2
       Name: !Sub ${AWS::StackName}-api-target-group
