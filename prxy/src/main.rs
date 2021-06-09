@@ -32,7 +32,7 @@ async fn main() {
     );
 
     info!(
-        "prxy http://localhost:{} -> http://localhost:{}",
+        "prxy http://0.0.0.0:{} -> http://localhost:{}",
         from_port, to_port
     );
 
