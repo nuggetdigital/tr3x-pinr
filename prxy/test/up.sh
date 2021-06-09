@@ -6,6 +6,8 @@ source $wd/../../.env
 
 export RUST_LOG=trace
 export IPFS_PATH=$wd/sandbox/ipfs-dump
+export PRXY_FROM_PORT=$PROXY_FROM_PORT
+export PRXY_TO_PORT=$PROXY_TO_PORT
 
 killall prxy ipfs
 

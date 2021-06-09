@@ -1,7 +1,7 @@
 use hyper::{
     body as hyper_body,
     client::HttpConnector,
-    header::{HeaderValue, CONTENT_TYPE},
+    header::{self, HeaderValue},
     Body as HyperBody, Client, Error, Method, Request, Response, StatusCode,
     Uri,
 };
@@ -107,11 +107,11 @@ pub async fn proxy(
     mut req: Request<HyperBody>,
     to_port: u16,
 ) -> Result<Response<HyperBody>, Error> {
-    let req_path = req.uri().path();
-    let req_meth = req.method();
-    let path_part = rm_first_char(req_path);
-
     debug!("incomin {:?}", &req);
+
+    let req_meth = req.method();
+    let req_path = req.uri().path();
+    let path_part = rm_first_char(req_path);
 
     match (req_meth, req_path) {
         (&Method::GET, _req_path) if looks_like_cid(path_part) => {
@@ -132,7 +132,7 @@ pub async fn proxy(
             let mut alt_res = Response::new(HyperBody::from(buf));
             alt_res
                 .headers_mut()
-                .insert(CONTENT_TYPE, HeaderValue::from_static(mime));
+                .insert(header::CONTENT_TYPE, HeaderValue::from_static(mime));
             *alt_res.status_mut() = StatusCode::OK;
 
             Ok(alt_res)
@@ -159,7 +159,7 @@ pub async fn proxy(
         }
         _ => {
             let mut res = Response::new(HyperBody::empty());
-            *res.status_mut() = StatusCode::NOT_FOUND;
+            *res.status_mut() = StatusCode::BAD_REQUEST;
             Ok(res)
         }
     }
