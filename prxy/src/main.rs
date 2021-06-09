@@ -20,7 +20,7 @@ async fn main() {
 
     let client = Client::builder().build_http();
 
-    let server = Server::bind(&([127, 0, 0, 1], from_port).into()).serve(
+    let server = Server::bind(&([0, 0, 0, 0], from_port).into()).serve(
         make_service_fn(move |_| {
             let client = client.clone();
             async move {
