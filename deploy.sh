@@ -23,23 +23,23 @@ aws cloudformation create-change-set \
   --change-set-type $change_set_type \
   --template-body file://stack.yml \
   --parameters \
-    Environment=$ENVIRONMENT \
-    Subdomain=$SUBDOMAIN \
-    HostedZoneId=$HOSTED_ZONE_ID \
-    ACMCertARN=$ACM_CERT_ARN \
-    CDNDefaultTTL=$CDN_DEFAULT_TTL \
-    CDNMaxTTL=$CDN_MAX_TTL \
-    CDNMinTTL=$CDN_MIN_TTL \
-    CDNDefaultRootObject=$CDN_DEFAULT_ROOT_OBJECT \
-    InstanceImage=$INSTANCE_IMAGE \
-    SSHPublicKeyName=$SSH_PUBLIC_KEY_NAME \
-    ServiceUserName=$SSH_USERNAME \
-    IPFSPath=$IPFS_PATH \
-    IPFSBinaryURL=$IPFS_BINARY_URL \
-    PRXYBinaryURL=$PRXY_BINARY_URL \
-    InstanceType=$INSTANCE_TYPE \
-    TrafficPort=$TRAFFIC_PORT \
-    PseudoRandomness=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
+    ParameterKey=Environment,ParameterValue=${ENVIRONMENT:-test} \
+    ParameterKey=Subdomain,ParameterValue=$SUBDOMAIN \
+    ParameterKey=HostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
+    ParameterKey=ACMCertARN,ParameterValue=$ACM_CERT_ARN \
+    ParameterKey=CDNDefaultTTL,ParameterValue=$CDN_DEFAULT_TTL \
+    ParameterKey=CDNMaxTTL,ParameterValue=$CDN_MAX_TTL \
+    ParameterKey=CDNMinTTL,ParameterValue=$CDN_MIN_TTL \
+    ParameterKey=CDNDefaultRootObject,ParameterValue=$CDN_DEFAULT_ROOT_OBJECT \
+    ParameterKey=InstanceImage,ParameterValue=$INSTANCE_IMAGE \
+    ParameterKey=SSHPublicKeyName,ParameterValue=$SSH_PUBLIC_KEY_NAME \
+    ParameterKey=ServiceUsername,ParameterValue=$SSH_USERNAME \
+    ParameterKey=IPFSPath,ParameterValue=$IPFS_PATH \
+    ParameterKey=IPFSBinaryURL,ParameterValue=$IPFS_BINARY_URL \
+    ParameterKey=PRXYBinaryURL,ParameterValue=$PRXY_BINARY_URL \
+    ParameterKey=InstanceType,ParameterValue=$INSTANCE_TYPE \
+    ParameterKey=TrafficPort,ParameterValue=$TRAFFIC_PORT \
+    ParameterKey=PseudoRandomness,ParameterValue=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
   --capabilities CAPABILITY_NAMED_IAM
 
 aws cloudformation wait change-set-create-complete \
