@@ -2,6 +2,7 @@
 
 set -eE
 
+source ./.secret.env
 source ./.env
 
 echo "generating a fresh key pair..."

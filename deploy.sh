@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ./.secret.env
 source ./.env
 source ./util.sh
 
@@ -22,14 +23,22 @@ aws cloudformation create-change-set \
   --change-set-type $change_set_type \
   --template-body file://stack.yml \
   --parameters \
-    Environment=${{ env.ENVIRONMENT }} \
-    Subdomain=${{ env.SUBDOMAIN }} \
-    HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
-    AcmCertArn=${{ secrets.ACM_CERT_ARN }} \
-    CdnDefaultTtl=${{ env.CDN_DEFAULT_TTL }} \
-    CdnMaxTtl=${{ env.CDN_MAX_TTL }} \
-    CdnMinTtl=${{ env.CDN_MIN_TTL }} \
-    CdnDefaultRootObject=${{ env.CDN_DEFAULT_ROOT_OBJECT }} \
+    Environment=$ENVIRONMENT \
+    Subdomain=$SUBDOMAIN \
+    HostedZoneId=$HOSTED_ZONE_ID \
+    ACMCertARN=$ACM_CERT_ARN \
+    CDNDefaultTTL=$CDN_DEFAULT_TTL \
+    CDNMaxTTL=$CDN_MAX_TTL \
+    CDNMinTTL=$CDN_MIN_TTL \
+    CDNDefaultRootObject=$CDN_DEFAULT_ROOT_OBJECT \
+    InstanceImage=$INSTANCE_IMAGE \
+    SSHPublicKeyName=$SSH_PUBLIC_KEY_NAME \
+    ServiceUserName=$SSH_USERNAME \
+    IPFSPath=$IPFS_PATH \
+    IPFSBinaryURL=$IPFS_BINARY_URL \
+    PRXYBinaryURL=$PRXY_BINARY_URL \
+    InstanceType=$INSTANCE_TYPE \
+    TrafficPort=$TRAFFIC_PORT \
     PseudoRandomness=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
   --capabilities CAPABILITY_NAMED_IAM
 

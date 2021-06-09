@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ./.secret.env
 source ./.env
 source ./util.sh
 
