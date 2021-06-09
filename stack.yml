@@ -366,6 +366,7 @@ Resources:
               After=network-online.target
               [Service]
               User=${ServiceUsername}
+              Environment=\"RUST_LOG=trace\"
               ExecStart=/usr/local/bin/prxy
               Type=simple
               Restart=on-failure
@@ -379,7 +380,7 @@ Resources:
             /usr/bin/sudo /bin/systemctl enable ipfs.service
             /usr/bin/sudo /bin/systemctl enable prxy.service
 
-            ## start the daemon
+            ## start the daemons
             /usr/bin/sudo /bin/systemctl start ipfs.service
             /usr/bin/sudo /bin/systemctl start prxy.service
 
@@ -418,11 +419,11 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
-      HealthCheckIntervalSeconds: 30
+      HealthCheckIntervalSeconds: 60
       HealthCheckPath: /status
       HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 60
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 2
       Name: !Sub ${AWS::StackName}-api-target-group
