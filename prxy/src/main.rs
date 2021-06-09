@@ -18,10 +18,7 @@ async fn main() {
 
     let (from_port, to_port) = lib::parse_ports();
 
-    let client = Client::builder()
-        .http1_title_case_headers(true)
-        .http1_preserve_header_case(true)
-        .build_http();
+    let client = Client::builder().build_http();
 
     let server = Server::bind(&([127, 0, 0, 1], from_port).into()).serve(
         make_service_fn(move |_| {
