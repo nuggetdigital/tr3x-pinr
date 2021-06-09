@@ -39,12 +39,12 @@ ACM_CERT_ARN=TODO
 ```
 AWS_DEFAULT_REGION=us-east-1
 
-#SUBDOMAIN=TODO
+SUBDOMAIN=TODO
 STACK_NAME=ipfs-pinr
-CHANGE_SET_NAME=$STACK_NAME-change-set-$(date +%s)
-CDN_DEFAULT_TTL=86400 # 1 day
-CDN_MAX_TTL=31536000 # 365 days
-CDN_MIN_TTL=1 # 1sec
+CHANGE_SET_BASE_NAME=$STACK_NAME-change-set-$(date +%s)
+CDN_DEFAULT_TTL=86400
+CDN_MAX_TTL=31536000
+CDN_MIN_TTL=1
 CDN_DEFAULT_ROOT_OBJECT=index.html
 INSTANCE_IMAGE=ami-0fa37863afb290840
 SSH_PUBLIC_KEY_NAME=$SSH_PRIVATE_KEY_NAME.pub
@@ -82,6 +82,8 @@ sshs into the instance
 destroys the stack
 
 ## docs
+
+some alternative identifier of the default ami configured in `.env`: `099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315`
 
 dss3 help
 

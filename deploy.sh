@@ -4,6 +4,8 @@ source ./.secret.env
 source ./.env
 source ./util.sh
 
+change_set_name=$CHANGE_SET_BASE_NAME-$(date +%s)
+
 stack_exists $STACK_NAME
 existed=$?
 
@@ -19,7 +21,7 @@ echo "creatin the change set"
 
 aws cloudformation create-change-set \
   --stack-name $STACK_NAME \
-  --change-set-name $CHANGE_SET_NAME \
+  --change-set-name $change_set_name \
   --change-set-type $change_set_type \
   --template-body file://stack.yml \
   --parameters \
@@ -44,12 +46,12 @@ aws cloudformation create-change-set \
 
 aws cloudformation wait change-set-create-complete \
   --stack-name $STACK_NAME \
-  --change-set-name $CHANGE_SET_NAME
+  --change-set-name $change_set_name
 
 change_set="$( \
   aws cloudformation describe-change-set \
     --stack-name $STACK_NAME \
-    --change-set-name $CHANGE_SET_NAME \
+    --change-set-name $change_set_name \
 )"
 
 echo "$change_set"
@@ -64,7 +66,7 @@ echo "executin the change set"
 
 aws cloudformation execute-change-set \
   --stack-name $STACK_NAME \
-  --change-set-name $CHANGE_SET_NAME
+  --change-set-name $change_set_name
 
 echo "awaitin the stack rollout"
 
