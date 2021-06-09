@@ -580,9 +580,9 @@ Outputs:
   BucketName:
     Description: Datastore bucket name
     Value: !Ref Bucket
-  DistributionURL:
-    Description: Track distribution URL
+  DistributionDomainName:
+    Description: Track distribution domain name
     Value: !If
       - IsProd
-      - !Sub https://${Subomain}
-      - !Sub https://${Distribution.DomainName}
+      - !Ref Subdomain
+      - !GetAtt Distribution.DomainName

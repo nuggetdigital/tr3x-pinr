@@ -8,6 +8,9 @@ stacks="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"
 alb="$( \
   jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"LoadBalancerDomainName\") | .OutputValue" <<< "$stacks" \
 )"
+dist="$( \
+  jq -r ".Stacks[] | select(.StackName == \"$STACK_NAME\") | .Outputs[] | select(.OutputKey == \"DistributionDomainName\") | .OutputValue" <<< "$stacks" \
+)"
 
 test_add_a_file_200() {
   printf "test_add_a_file_200\n"
@@ -44,7 +47,7 @@ test_get_a_file_200() {
     -X GET \
     -D $resp_head \
     -vL# \
-    http://$alb/$cid \
+    http://$dist/$cid \
   > $resp_body
 
   assert_status $resp_head 200
