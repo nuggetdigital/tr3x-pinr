@@ -1,7 +1,7 @@
 source <(curl -sSf https://raw.githubusercontent.com/chiefbiiko/bashert/v1.1.0/bashert.sh)
 
 wd=$(dirname ${BASH_SOURCE[0]})
-
+source $wd/../.secret.env
 source $wd/../.env
 
 stacks="$(aws cloudformation describe-stacks --stack-name $STACK_NAME)"

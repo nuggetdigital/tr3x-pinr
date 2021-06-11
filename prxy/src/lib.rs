@@ -32,7 +32,7 @@ fn looks_like_cid(part: &str) -> bool {
 
 #[inline]
 fn parse_uri(s: String) -> Uri {
-    s.parse().expect("uri")
+    s.parse().expect("uri") // TODO: get rid of expect
 }
 
 #[inline]
