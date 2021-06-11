@@ -128,6 +128,11 @@ pub async fn proxy(
     let path_part = rm_first_char(req_path);
 
     match (req_meth, req_path) {
+        (&Method::OPTIONS, _req_path) => {
+            let mut res = add_cors_headers(Response::new(HyperBody::empty()));
+            *res.status_mut() = StatusCode::NO_CONTENT;
+            Ok(res)
+        }
         (&Method::GET, _req_path) if looks_like_cid(path_part) => {
             let uri = parse_uri(format!(
                 "http://127.0.0.1:{}/api/v0/cat?arg={}",
@@ -143,8 +148,7 @@ pub async fn proxy(
             let buf = hyper_body::to_bytes(res.body_mut()).await?;
             let mime = mime_type(&buf);
 
-            let mut alt_res =
-                add_cors_headers(Response::new(HyperBody::from(buf)));
+            let mut alt_res = Response::new(HyperBody::from(buf));
             alt_res
                 .headers_mut()
                 .insert(header::CONTENT_TYPE, HeaderValue::from_static(mime));
@@ -169,11 +173,11 @@ pub async fn proxy(
         (&Method::POST, "/") => {
             let formdata_req = to_formdata_request(req, to_port).await?;
             let res = client.request(formdata_req).await?;
-            let res = add_cors_headers(strip_bloat_headers(res));
+            let res = strip_bloat_headers(res);
             Ok(res)
         }
         _ => {
-            let mut res = add_cors_headers(Response::new(HyperBody::empty()));
+            let mut res = Response::new(HyperBody::empty());
             *res.status_mut() = StatusCode::BAD_REQUEST;
             Ok(res)
         }
