@@ -297,14 +297,6 @@ Resources:
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
 
-            ## allow cors
-            /usr/local/bin/ipfs config \
-              --json \
-              API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-            /usr/local/bin/ipfs config \
-              --json \
-              API.HTTPHeaders.Access-Control-Allow-Methods '["GET","HEAD","POST","OPTIONS"]'
-
             ## interpolatin our custom s3 datastore for /blocks
             temp_conf=$(mktemp)
             /usr/bin/jq \

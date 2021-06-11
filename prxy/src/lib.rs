@@ -58,6 +58,20 @@ fn strip_status_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
 }
 
 #[inline]
+fn add_cors_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
+    let hdrs = res.headers_mut();
+    hdrs.insert(
+        header::ACCESS_CONTROL_ALLOW_ORIGIN,
+        HeaderValue::from_static("*"),
+    );
+    hdrs.insert(
+        header::ACCESS_CONTROL_ALLOW_METHODS,
+        HeaderValue::from_static("GET, HEAD, POST, OPTIONS"),
+    );
+    res
+}
+
+#[inline]
 pub fn parse_ports() -> (u16, u16) {
     (
         env!("PRXY_FROM_PORT")
@@ -129,7 +143,8 @@ pub async fn proxy(
             let buf = hyper_body::to_bytes(res.body_mut()).await?;
             let mime = mime_type(&buf);
 
-            let mut alt_res = Response::new(HyperBody::from(buf));
+            let mut alt_res =
+                add_cors_headers(Response::new(HyperBody::from(buf)));
             alt_res
                 .headers_mut()
                 .insert(header::CONTENT_TYPE, HeaderValue::from_static(mime));
@@ -154,11 +169,11 @@ pub async fn proxy(
         (&Method::POST, "/") => {
             let formdata_req = to_formdata_request(req, to_port).await?;
             let res = client.request(formdata_req).await?;
-            let res = strip_bloat_headers(res);
+            let res = add_cors_headers(strip_bloat_headers(res));
             Ok(res)
         }
         _ => {
-            let mut res = Response::new(HyperBody::empty());
+            let mut res = add_cors_headers(Response::new(HyperBody::empty()));
             *res.status_mut() = StatusCode::BAD_REQUEST;
             Ok(res)
         }
