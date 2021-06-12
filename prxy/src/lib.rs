@@ -36,7 +36,7 @@ fn parse_uri(s: String) -> Uri {
 }
 
 #[inline]
-fn strip_bloat_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
+fn strip_bloat_hdrs(res: &mut Response<HyperBody>) -> () {
     let hdrs = res.headers_mut();
     hdrs.remove("server");
     hdrs.remove("trailer");
@@ -46,19 +46,17 @@ fn strip_bloat_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
     hdrs.remove("x-content-length");
     hdrs.remove("x-stream-output");
     hdrs.remove("x-chunked-output");
-    res
 }
 
 #[inline]
-fn strip_status_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
+fn strip_status_hdrs(res: &mut Response<HyperBody>) -> () {
     let hdrs = res.headers_mut();
     hdrs.remove("transfer-encoding");
     hdrs.remove("content-type");
-    res
 }
 
 #[inline]
-fn add_cors_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
+fn add_cors_hdrs(res: &mut Response<HyperBody>) -> () {
     let hdrs = res.headers_mut();
     hdrs.insert(
         header::ACCESS_CONTROL_ALLOW_ORIGIN,
@@ -68,7 +66,6 @@ fn add_cors_headers(mut res: Response<HyperBody>) -> Response<HyperBody> {
         header::ACCESS_CONTROL_ALLOW_METHODS,
         HeaderValue::from_static("GET, HEAD, POST, OPTIONS"),
     );
-    res
 }
 
 #[inline]
@@ -85,37 +82,6 @@ pub fn parse_ports() -> (u16, u16) {
     )
 }
 
-async fn to_formdata_request(
-    req: Request<HyperBody>,
-    to_port: u16,
-) -> Result<Request<HyperBody>, Error> {
-    let mut form = Form::default();
-
-    form.add_reader(
-        "file",
-        Cursor::new(hyper_body::to_bytes(req.into_body()).await?),
-    );
-
-    let uri = parse_uri(format!(
-        "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
-        to_port
-    ));
-
-    let formdata_req = form
-        .set_body_convert::<HyperBody, MultiBody>(Request::post(uri))
-        .expect("formdata req"); // TODO: get rid of expect
-
-    Ok(formdata_req)
-}
-
-fn mime_type(buf: &[u8]) -> &'static str {
-    if let Some(kind) = infer(buf) {
-        kind.mime_type()
-    } else {
-        "application/octet-stream"
-    }
-}
-
 pub async fn proxy(
     client: Client<HttpConnector>,
     mut req: Request<HyperBody>,
@@ -129,7 +95,8 @@ pub async fn proxy(
 
     match (req_meth, req_path) {
         (&Method::OPTIONS, _req_path) => {
-            let mut res = add_cors_headers(Response::new(HyperBody::empty()));
+            let mut res = Response::new(HyperBody::empty());
+            add_cors_hdrs(&mut res);
             *res.status_mut() = StatusCode::NO_CONTENT;
             Ok(res)
         }
@@ -138,23 +105,30 @@ pub async fn proxy(
                 "http://127.0.0.1:{}/api/v0/cat?arg={}",
                 to_port, path_part
             ));
-
-            let alt_req = Request::post(uri)
+            let req = Request::post(uri)
                 .body(HyperBody::empty())
                 .expect("alt req"); // TODO: get rid of expect
 
-            let mut res = client.request(alt_req).await?;
+            let mut res = client.request(req).await?;
 
             let buf = hyper_body::to_bytes(res.body_mut()).await?;
-            let mime = mime_type(&buf);
 
-            let mut alt_res = Response::new(HyperBody::from(buf));
-            alt_res
-                .headers_mut()
+            let mime = if let Some(kind) = infer(&buf) {
+                kind.mime_type()
+            } else {
+                "application/octet-stream"
+            };
+
+            let mut res = Response::new(HyperBody::from(buf));
+
+            res.headers_mut()
                 .insert(header::CONTENT_TYPE, HeaderValue::from_static(mime));
-            *alt_res.status_mut() = StatusCode::OK;
 
-            Ok(alt_res)
+            add_cors_hdrs(&mut res);
+
+            *res.status_mut() = StatusCode::OK;
+
+            Ok(res)
         }
         (&Method::GET, "/status") => {
             *req.uri_mut() = parse_uri(format!(
@@ -164,21 +138,43 @@ pub async fn proxy(
             *req.method_mut() = Method::POST;
 
             let mut res = client.request(req).await?;
-            *res.body_mut() = HyperBody::empty();
 
-            let res = strip_status_headers(strip_bloat_headers(res));
+            *res.body_mut() = HyperBody::empty();
+            strip_bloat_hdrs(&mut res);
+            strip_status_hdrs(&mut res);
 
             Ok(res)
         }
         (&Method::POST, "/") => {
-            let formdata_req = to_formdata_request(req, to_port).await?;
-            let res = client.request(formdata_req).await?;
-            let res = strip_bloat_headers(res);
+            let uri = parse_uri(format!(
+                "http://127.0.0.1:{}/api/v0/add?cid-version=1&hash=blake2b-256&pin=false",
+                to_port
+            ));
+
+            let mut form = Form::default();
+
+            form.add_reader(
+                "file",
+                Cursor::new(hyper_body::to_bytes(req.into_body()).await?),
+            );
+
+            let req = form
+                .set_body_convert::<HyperBody, MultiBody>(Request::post(uri))
+                .expect("formdata req"); // TODO: get rid of expect
+
+            let mut res = client.request(req).await?;
+
+            strip_bloat_hdrs(&mut res);
+            add_cors_hdrs(&mut res);
+
             Ok(res)
         }
         _ => {
             let mut res = Response::new(HyperBody::empty());
+
+            add_cors_hdrs(&mut res);
             *res.status_mut() = StatusCode::BAD_REQUEST;
+
             Ok(res)
         }
     }
