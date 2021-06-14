@@ -501,7 +501,7 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: !Ref CDNDefaultRootObject
         Enabled: true
-        HttpVersion: http2 # max http version
+        HttpVersion: http1.1 # max http version
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
         # alias record which carries along extra cost
         IPV6Enabled: false
