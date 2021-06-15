@@ -6,6 +6,7 @@ use hyper::{
     Uri,
 };
 use hyper_multipart_rfc7578::client::multipart::{Body as MultiBody, Form};
+use hyper_timeout::TimeoutConnector;
 use infer::get as infer;
 use lazy_static::lazy_static;
 use log::debug;
@@ -83,7 +84,7 @@ pub fn parse_ports() -> (u16, u16) {
 }
 
 pub async fn proxy(
-    client: Client<HttpConnector>,
+    client: Client<TimeoutConnector<HttpConnector>>,
     mut req: Request<HyperBody>,
     to_port: u16,
 ) -> Result<Response<HyperBody>, Error> {

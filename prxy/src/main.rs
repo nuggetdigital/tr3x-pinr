@@ -5,10 +5,12 @@ extern crate pretty_env_logger;
 extern crate log;
 
 use hyper::{
+    client::HttpConnector,
     service::{make_service_fn, service_fn},
-    Client, Server,
+    Body, Client, Server,
 };
-use std::convert::Infallible;
+use hyper_timeout::TimeoutConnector;
+use std::{convert::Infallible, time::Duration};
 
 mod lib;
 
@@ -18,7 +20,11 @@ async fn main() {
 
     let (from_port, to_port) = lib::parse_ports();
 
-    let client = Client::builder().build_http();
+    let mut connector = TimeoutConnector::new(HttpConnector::new());
+    connector.set_connect_timeout(Some(Duration::from_secs(5)));
+    connector.set_read_timeout(Some(Duration::from_secs(5)));
+    connector.set_write_timeout(Some(Duration::from_secs(5)));
+    let client = Client::builder().build::<_, Body>(connector);
 
     let server = Server::bind(&([0, 0, 0, 0], from_port).into()).serve(
         make_service_fn(move |_| {
