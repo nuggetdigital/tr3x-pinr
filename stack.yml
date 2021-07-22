@@ -10,8 +10,10 @@ Parameters:
     Default: test
 
   Subdomain:
-    Description: Route53 subdomain
+    Description: Route53 subdomain for the distribution
     Type: String
+
+  # TODO: domain param to put ontop of the alb
 
   HostedZoneId:
     Description: Id of the subdomain hosted zone for the production account
