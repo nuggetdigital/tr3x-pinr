@@ -9,7 +9,7 @@ jobs:
   prerelease:
     runs-on: ubuntu-20.04
     steps:
-      - name: get the current version tag for ipfs-pinr
+      - name: get the current version tag for tr3x-pinr
         run: |
           pushed_tag=${GITHUB_REF/refs\/tags\//}
           echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
 
-      - name: get the current version tag for ipfs-pinr
+      - name: get the current version tag for tr3x-pinr
         run: |
           pushed_tag=${GITHUB_REF/refs\/tags\//}
           echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
@@ -118,7 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
 
-      - name: get the current version tag for ipfs-pinr
+      - name: get the current version tag for tr3x-pinr
         run: |
           pushed_tag=${GITHUB_REF/refs\/tags\//}
           echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
@@ -132,7 +132,7 @@ jobs:
         with:
           rust-version: "1.52.1"
 
-      - name: build ipfs-pinr-prxy
+      - name: build tr3x-pinr-prxy
         run: cargo build --release --manifest-path=./prxy/Cargo.toml
 
       - name: gzipup the prxy binary
@@ -156,7 +156,7 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./prxy.gz.sha256sum
-          asset_name: ipfs-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz.sha256sum
+          asset_name: tr3x-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz.sha256sum
           asset_content_type: application/gzip
 
       - name: upload the prebuilt prxy binary
@@ -166,5 +166,5 @@ jobs:
         with:
           upload_url: ${{ env.RELEASE_UPLOAD_URL }}
           asset_path: ./prxy.gz
-          asset_name: ipfs-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz
+          asset_name: tr3x-pinr-prxy-${{ env.GO_IPFS_TAG }}-x86_64-unknown-linux-gnu.gz
           asset_content_type: application/gzip

@@ -276,7 +276,7 @@ Resources:
             | /usr/bin/gunzip \
             > /usr/local/bin/ipfs
 
-            ## download the ipfs-pinr-prxy binary
+            ## download the tr3x-pinr-prxy binary
             /usr/bin/curl -fsSL ${PRXYBinaryURL} \
             | /usr/bin/gunzip \
             > /usr/local/bin/prxy

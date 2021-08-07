@@ -1,10 +1,10 @@
 ```nofmt
-██╗██████╗ ███████╗███████╗      ██████╗ ██╗███╗   ██╗██████╗ 
-██║██╔══██╗██╔════╝██╔════╝      ██╔══██╗██║████╗  ██║██╔══██╗
-██║██████╔╝█████╗  ███████╗█████╗██████╔╝██║██╔██╗ ██║██████╔╝
-██║██╔═══╝ ██╔══╝  ╚════██║╚════╝██╔═══╝ ██║██║╚██╗██║██╔══██╗
-██║██║     ██║     ███████║      ██║     ██║██║ ╚████║██║  ██║
-╚═╝╚═╝     ╚═╝     ╚══════╝      ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+████████╗██████╗ ██████╗ ██╗  ██╗     ██████╗ ██╗███╗   ██╗██████╗ 
+╚══██╔══╝██╔══██╗╚════██╗╚██╗██╔╝     ██╔══██╗██║████╗  ██║██╔══██╗
+   ██║   ██████╔╝ █████╔╝ ╚███╔╝█████╗██████╔╝██║██╔██╗ ██║██████╔╝
+   ██║   ██╔══██╗ ╚═══██╗ ██╔██╗╚════╝██╔═══╝ ██║██║╚██╗██║██╔══██╗
+   ██║   ██║  ██║██████╔╝██╔╝ ██╗     ██║     ██║██║ ╚████║██║  ██║
+   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝     ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
 saucy serverlite ipfs service stashin a s3 datastore 🌍🌒🛸🪐
 ```
 
@@ -14,7 +14,7 @@ deploy the setup stack...
 
 ```bash
 aws cloudformation deploy \
-  --stack-name ipfs-pinr-setup \
+  --stack-name tr3x-pinr-setup \
   --template-file ./stack_setup.yml \
   --capabilities CAPABILITY_IAM
 ```
@@ -40,17 +40,17 @@ ACM_CERT_ARN=TODO
 AWS_DEFAULT_REGION=us-east-1
 
 SUBDOMAIN=TODO
-STACK_NAME=ipfs-pinr
-CHANGE_SET_BASE_NAME=$STACK_NAME-change-set-$(date +%s)
-CDN_DEFAULT_TTL=86400
+STACK_NAME=tr3x-pinr
+CHANGE_SET_BASE_NAME=$STACK_NAME-change-set
+CDN_DEFAULT_TTL=604800
 CDN_MAX_TTL=31536000
-CDN_MIN_TTL=1
+CDN_MIN_TTL=3600
 CDN_DEFAULT_ROOT_OBJECT=index.html
-INSTANCE_IMAGE=ami-0fa37863afb290840
+INSTANCE_IMAGE=ami-0c3086222d6e0e623 # ubuntu 21.04
 SSH_PUBLIC_KEY_NAME=$SSH_PRIVATE_KEY_NAME.pub
 IPFS_PATH=/home/$SSH_USERNAME/ipfs
-IPFS_BINARY_URL=https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
-PRXY_BINARY_URL=https://github.com/nuggetdigital/ipfs-pinr/releases/download/v0.8.0/ipfs-pinr-prxy-v0.8.0-x86_64-unknown-linux-gnu.gz
+IPFS_BINARY_URL=https://github.com/nuggetdigital/tr3x-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
+PRXY_BINARY_URL=https://github.com/nuggetdigital/tr3x-pinr/releases/download/v0.8.0/tr3x-pinr-prxy-v0.8.0-x86_64-unknown-linux-gnu.gz
 INSTANCE_TYPE=t3.nano
 TRAFFIC_PORT=5000
 
@@ -82,8 +82,6 @@ sshs into the instance
 destroys the stack
 
 ## docs
-
-some alternative identifier of the default ami configured in `.env`: `099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210315`
 
 dss3 help
 
