@@ -38,7 +38,7 @@ jobs:
           name: release_upload_url
           path: ./release_upload_url.txt
 
-  bundle_ipfs_pinr:
+  bundle_tr3x_pinr:
     needs: prerelease
     runs-on: ubuntu-20.04
     steps:
@@ -112,7 +112,7 @@ jobs:
           asset_name: go-ipfs-${{ env.GO_IPFS_TAG }}+dss3-${{ env.DSS3_VERSION }}-x86_64-unknown-linux-gnu.gz
           asset_content_type: application/gzip
 
-  bundle_ipfs_pinr_prxy:
+  bundle_tr3x_pinr_prxy:
     needs: prerelease
     runs-on: ubuntu-20.04
     steps:

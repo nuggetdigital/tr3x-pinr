@@ -9,34 +9,32 @@ Parameters:
       - prod
     Default: test
 
-  Subdomain:
+  Domain:
     Description: Route53 subdomain for the distribution
     Type: String
-
-  # TODO: domain param to put ontop of the alb
 
   HostedZoneId:
     Description: Id of the subdomain hosted zone for the production account
     Type: String
 
-  ACMCertARN:
+  CertificateArn:
     Description: |
       ARN of an ACM certificate for the prod distribution
     Type: String
 
-  CDNDefaultTTL:
+  CdnDefaultTtl:
     Description: Default cache object TTL
     Type: Number
 
-  CDNMaxTTL:
+  CdnMaxTtl:
     Description: Maximum cache object TTL
     Type: Number
 
-  CDNMinTTL:
+  CdnMinTtl:
     Description: Minimum cache object TTL
     Type: Number
 
-  CDNDefaultRootObject:
+  CdnDefaultRootObject:
     Description: Default root object path used by the media CloudFront distribution
     AllowedPattern: "^([a-zA-Z0-9_-]+\\.html){0,1}$"
     Type: String
@@ -45,7 +43,7 @@ Parameters:
     Description: Amazon machine image for the EC2 instance
     Type: String
 
-  SSHPublicKeyName:
+  SshPublicKeyName:
     Description: EC2 SSH public key name that is available within EC2
     Type: String
 
@@ -53,15 +51,15 @@ Parameters:
     Description: Name of the linux user designated to run the ipfs service
     Type: String
 
-  IPFSPath:
+  IpfsPath:
     Description: IPFS data dir path
     Type: String
 
-  IPFSBinaryURL:
+  IpfsBinaryUrl:
     Description: URL serving the ipfs binary incl the S3 datastore plugin
     Type: String
 
-  PRXYBinaryURL:
+  PrxyBinaryUrl:
     Description: URL serving the ipfs pinr prxy binary
     Type: String
 
@@ -256,7 +254,7 @@ Resources:
           Arn: !GetAtt InstanceProfile.Arn
         ImageId: !Ref InstanceImage
         InstanceType: !Ref InstanceType
-        KeyName: !Ref SSHPublicKeyName
+        KeyName: !Ref SshPublicKeyName
         SecurityGroupIds:
           - !Ref InstanceSecurityGroup
         UserData: !Base64
@@ -268,16 +266,16 @@ Resources:
             /usr/bin/sudo /usr/bin/apt-get install jq -y
 
             ## make the ipfs data dir
-            /bin/mkdir ${IPFSPath}
+            /bin/mkdir ${IpfsPath}
 
             # install the ipfs binaries
             ## download the customized ipfs+dss3 binary
-            /usr/bin/curl -fsSL ${IPFSBinaryURL} \
+            /usr/bin/curl -fsSL ${IpfsBinaryUrl} \
             | /usr/bin/gunzip \
             > /usr/local/bin/ipfs
 
             ## download the tr3x-pinr-prxy binary
-            /usr/bin/curl -fsSL ${PRXYBinaryURL} \
+            /usr/bin/curl -fsSL ${PrxyBinaryUrl} \
             | /usr/bin/gunzip \
             > /usr/local/bin/prxy
 
@@ -294,7 +292,7 @@ Resources:
               /usr/local/bin/prxy
 
             # setup ipfs
-            export IPFS_PATH=${IPFSPath}
+            export IPFS_PATH=${IpfsPath}
 
             ## initializin the ipfs repo with a server profile
             /usr/local/bin/ipfs init --empty-repo --profile server,lowpower
@@ -304,11 +302,11 @@ Resources:
             /usr/bin/jq \
               -c \
               '.Datastore.Spec.mounts[.Datastore.Spec.mounts | map(.mountpoint == "/blocks") | index(true)] |= {"child":{"type":"s3ds","region":"${AWS::Region}","bucket":"${Bucket}","rootDirectory":"content","accessKey":"","secretKey":""},"mountpoint":"/blocks","prefix":"s3.datastore","type":"measure"}' \
-              ${IPFSPath}/config \
+              ${IpfsPath}/config \
             > $temp_conf
 
             ## swipin the ipfs repo in prep of the reinit
-            /usr/bin/rm -rf ${IPFSPath}/*
+            /usr/bin/rm -rf ${IpfsPath}/*
 
             ## reinit the repo from our custom config 
             /usr/local/bin/ipfs init $temp_conf
@@ -321,13 +319,13 @@ Resources:
             /usr/bin/sudo /usr/bin/apt-get autoremove -y
 
             ## grantin ipfs path ownership to the systemd service user
-            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu ${IPFSPath}
+            /usr/bin/sudo /usr/bin/chown -hR ${ServiceUsername}:ubuntu ${IpfsPath}
 
             ## adjust the ipfs path access rights
-            /usr/bin/sudo /usr/bin/chmod -R 0700 ${IPFSPath}
+            /usr/bin/sudo /usr/bin/chmod -R 0700 ${IpfsPath}
 
             ## explicitely grantin ipfs file ownership to the systemd svc usr
-            ipfs_files=$(/usr/bin/find ${IPFSPath} -type f)
+            ipfs_files=$(/usr/bin/find ${IpfsPath} -type f)
             /usr/bin/sudo /usr/bin/chown ${ServiceUsername}:ubuntu $ipfs_files
 
             ## make vol files accessible to the service user only
@@ -342,7 +340,7 @@ Resources:
               After=network-online.target
               [Service]
               User=${ServiceUsername}
-              Environment=\"IPFS_PATH=${IPFSPath}\"
+              Environment=\"IPFS_PATH=${IpfsPath}\"
               ExecStart=/usr/local/bin/ipfs daemon
               Type=simple
               Restart=on-failure
@@ -399,7 +397,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       # Certificates:
-      #   - CertificateArn: !Ref ACMCertARN
+      #   - CertificateArn: !Ref CertificateArn
       DefaultActions:
         - FixedResponseConfig:
             StatusCode: 403
@@ -480,7 +478,7 @@ Resources:
       DistributionConfig:
         Aliases: !If
           - IsProd
-          - [!Ref Subdomain]
+          - [!Ref Domain]
           - []
         DefaultCacheBehavior:
           AllowedMethods:
@@ -496,12 +494,12 @@ Resources:
             Cookies:
               Forward: none
             QueryString: false
-          DefaultTTL: !Ref CDNDefaultTTL
-          MaxTTL: !Ref CDNMaxTTL
-          MinTTL: !Ref CDNMinTTL
+          DefaultTTL: !Ref CdnDefaultTtl
+          MaxTTL: !Ref CdnMaxTtl
+          MinTTL: !Ref CdnMinTtl
           TargetOriginId: !Sub ${LoadBalancer.LoadBalancerName}-origin
           ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: !Ref CDNDefaultRootObject
+        DefaultRootObject: !Ref CdnDefaultRootObject
         Enabled: true
         HttpVersion: "http1.1" # max http version
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
@@ -536,7 +534,7 @@ Resources:
         PriceClass: PriceClass_100
         ViewerCertificate: !If
           - IsProd
-          - AcmCertificateArn: !Ref ACMCertARN
+          - AcmCertificateArn: !Ref CertificateArn
             MinimumProtocolVersion: TLSv1.2_2018
             SslSupportMethod: sni-only
           - CloudFrontDefaultCertificate: true
@@ -546,7 +544,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Subdomain
+      Name: !Ref Domain
       Type: A
       AliasTarget:
         # Below zone id is used for any CloudFront Distribution
@@ -567,5 +565,5 @@ Outputs:
     Description: Track distribution domain name
     Value: !If
       - IsProd
-      - !Ref Subdomain
+      - !Ref Domain
       - !GetAtt Distribution.DomainName

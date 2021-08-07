@@ -26,19 +26,19 @@ aws cloudformation create-change-set \
   --template-body file://stack.yml \
   --parameters \
     ParameterKey=Environment,ParameterValue=${ENVIRONMENT:-test} \
-    ParameterKey=Subdomain,ParameterValue=$SUBDOMAIN \
+    ParameterKey=Domain,ParameterValue=$DOMAIN \
     ParameterKey=HostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
-    ParameterKey=ACMCertARN,ParameterValue=$ACM_CERT_ARN \
-    ParameterKey=CDNDefaultTTL,ParameterValue=$CDN_DEFAULT_TTL \
-    ParameterKey=CDNMaxTTL,ParameterValue=$CDN_MAX_TTL \
-    ParameterKey=CDNMinTTL,ParameterValue=$CDN_MIN_TTL \
-    ParameterKey=CDNDefaultRootObject,ParameterValue=$CDN_DEFAULT_ROOT_OBJECT \
+    ParameterKey=CertificateArn,ParameterValue=$CERTIFICATE_ARN \
+    ParameterKey=CdnDefaultTtl,ParameterValue=$CDN_DEFAULT_TTL \
+    ParameterKey=CdnMaxTtl,ParameterValue=$CDN_MAX_TTL \
+    ParameterKey=CdnMinTtl,ParameterValue=$CDN_MIN_TTL \
+    ParameterKey=CdnDefaultRootObject,ParameterValue=$CDN_DEFAULT_ROOT_OBJECT \
     ParameterKey=InstanceImage,ParameterValue=$INSTANCE_IMAGE \
-    ParameterKey=SSHPublicKeyName,ParameterValue=$SSH_PUBLIC_KEY_NAME \
+    ParameterKey=SshPublicKeyName,ParameterValue=$SSH_PUBLIC_KEY_NAME \
     ParameterKey=ServiceUsername,ParameterValue=$SSH_USERNAME \
-    ParameterKey=IPFSPath,ParameterValue=$IPFS_PATH \
-    ParameterKey=IPFSBinaryURL,ParameterValue=$IPFS_BINARY_URL \
-    ParameterKey=PRXYBinaryURL,ParameterValue=$PRXY_BINARY_URL \
+    ParameterKey=IpfsPath,ParameterValue=$IPFS_PATH \
+    ParameterKey=IpfsBinaryUrl,ParameterValue=$IPFS_BINARY_URL \
+    ParameterKey=PrxyBinaryUrl,ParameterValue=$PRXY_BINARY_URL \
     ParameterKey=InstanceType,ParameterValue=$INSTANCE_TYPE \
     ParameterKey=TrafficPort,ParameterValue=$TRAFFIC_PORT \
     ParameterKey=PseudoRandomness,ParameterValue=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
