@@ -60,7 +60,7 @@ Parameters:
     Type: String
 
   PrxyBinaryUrl:
-    Description: URL serving the ipfs pinr prxy binary
+    Description: URL serving the tr3x pinr prxy binary
     Type: String
 
   InstanceType:
@@ -68,7 +68,7 @@ Parameters:
     Type: String
 
   TrafficPort:
-    Description: EC2 traffic port - the port that the ipfs pinr prxy listens on
+    Description: EC2 traffic port - the port that the tr3x pinr prxy listens on
     Type: Number
 
   PseudoRandomness:
@@ -332,10 +332,10 @@ Resources:
             /usr/bin/sudo /usr/bin/chmod 0700 $ipfs_files
 
             # setup systemd services
-            ## the ipfs pinr daemon
+            ## the tr3x pinr daemon
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description=ipfs pinr daemon
+              Description=tr3x pinr daemon
               Wants=network-online.target
               After=network-online.target
               [Service]
@@ -350,10 +350,10 @@ Resources:
             " \
             > /etc/systemd/system/ipfs.service
 
-            ## and the ipfs pinr prxy
+            ## and the tr3x pinr prxy
             /usr/bin/sudo /usr/bin/echo -e "
               [Unit]
-              Description=ipfs pinr prxy
+              Description=tr3x pinr prxy
               Wants=network-online.target
               After=network-online.target
               [Service]
