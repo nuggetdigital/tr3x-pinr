@@ -1,0 +1,86 @@
+name: cd
+
+on:
+  push:
+    branches:
+      - main
+      - test
+      
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  DIST_SUBDOMAIN: TODO
+  ALB_SUBDOMAIN: TODO
+  STACK_NAME: tr3x-pinr
+  CHANGE_SET_BASE_NAME: $STACK_NAME-change-set
+  CDN_DEFAULT_TTL: 604800
+  CDN_MAX_TTL: 31536000
+  CDN_MIN_TTL: 3600
+  CDN_DEFAULT_ROOT_OBJECT: index.html
+  INSTANCE_IMAGE: ami-0c3086222d6e0e623 # ubuntu 21.04
+  IPFS_PATH: /home/$SSH_USERNAME/ipfs
+  IPFS_BINARY_URL: https://github.com/nuggetdigital/tr3x-pinr/releases/download/v0.8.0/go-ipfs-v0.8.0+dss3-v0.7.0-x86_64-unknown-linux-gnu.gz
+  PRXY_BINARY_URL: https://github.com/nuggetdigital/tr3x-pinr/releases/download/v0.8.0/tr3x-pinr-prxy-v0.8.0-x86_64-unknown-linux-gnu.gz
+  INSTANCE_TYPE: t3.micro # t3.micro~8€monthly t3.nano~4€monthly
+  TRAFFIC_PORT: 5000
+  GO111MODULE: auto
+  DSS3_VERSION: v0.7.0
+  PRXY_FROM_PORT: 5000
+  PRXY_TO_PORT: 5001
+  # further needs the following secrets 
+  # SSH_USERNAME, SSH_PRIVATE_KEY_NAME, and HOSTED_ZONE_ID
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: map branch 2 test/prod
+        run: |
+          if [[ ${{ github.ref }} == *main ]]; then
+            # TODO: revert 2 prod
+            echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v1.5.9
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: cfn validate stack.yml
+        run: |
+          aws cloudformation validate-template \
+            --template-body="file://stack.yml"
+
+      - name: set env vars
+        run: |
+            echo "SSH_PUBLIC_KEY_NAME=${{ secrets.SSH_PRIVATE_KEY_NAME }}.pub" >> $GITHUB_ENV
+
+      - name: deploy the core stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name $STACK_NAME \
+            --template-file ./stack.yml \
+            --parameters-overrides \
+              Environment=${ENVIRONMENT:-test} \
+              DistributionSubdomain=$DIST_SUBDOMAIN \
+              LoadBalancerSubdomain=$ALB_SUBDOMAIN \
+              HostedZoneId=$HOSTED_ZONE_ID \
+              CertificateArn=$CERTIFICATE_ARN \
+              CdnDefaultTtl=$CDN_DEFAULT_TTL \
+              CdnMaxTtl=$CDN_MAX_TTL \
+              CdnMinTtl=$CDN_MIN_TTL \
+              CdnDefaultRootObject=$CDN_DEFAULT_ROOT_OBJECT \
+              InstanceImage=$INSTANCE_IMAGE \
+              SshPublicKeyName=$SSH_PUBLIC_KEY_NAME \
+              ServiceUsername=$SSH_USERNAME \
+              IpfsPath=$IPFS_PATH \
+              IpfsBinaryUrl=$IPFS_BINARY_URL \
+              PrxyBinaryUrl=$PRXY_BINARY_URL \
+              InstanceType=$INSTANCE_TYPE \
+              TrafficPort=$TRAFFIC_PORT \
+              PseudoRandomness=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16) \
+            --capabilities CAPABILITY_NAMED_IAM

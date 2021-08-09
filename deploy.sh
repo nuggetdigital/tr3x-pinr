@@ -26,8 +26,8 @@ aws cloudformation create-change-set \
   --template-body file://stack.yml \
   --parameters \
     ParameterKey=Environment,ParameterValue=${ENVIRONMENT:-test} \
-    ParameterKey=DistributionSubdomain,ParameterValue=$DIST_SUBOMAIN \
-    ParameterKey=LoadBalancerSubdomain,ParameterValue=$ALB_SUBOMAIN \
+    ParameterKey=DistributionSubdomain,ParameterValue=$DIST_SUBDOMAIN \
+    ParameterKey=LoadBalancerSubdomain,ParameterValue=$ALB_SUBDOMAIN \
     ParameterKey=HostedZoneId,ParameterValue=$HOSTED_ZONE_ID \
     ParameterKey=CertificateArn,ParameterValue=$CERTIFICATE_ARN \
     ParameterKey=CdnDefaultTtl,ParameterValue=$CDN_DEFAULT_TTL \

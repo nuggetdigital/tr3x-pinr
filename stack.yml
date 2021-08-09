@@ -565,6 +565,8 @@ Resources:
       ResourceRecords:
         - !GetAtt LoadBalancer.DNSName
 
+# TODO: certificates for dist & alb subdomain
+
 Outputs:
   InstancePublicIp:
     Description: Public ip of the node

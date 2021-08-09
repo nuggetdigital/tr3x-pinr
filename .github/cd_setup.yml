@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: tr3x-pinr continous deployment setup
+
+Resources:
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: DeploymentPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowStackDeployments
+                Effect: Allow
+                Action:
+                  - cloudformation:*
+                  - s3:*
+                  - iam:*
+                  - cloudfront:*
+                  - logs:*
+                  - ec2:*
+                  - route53:*
+                  - elbv2:*
+                Resource: "*"
+
+  AccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref User
+
+Outputs:
+  UserArn:
+    Description: IAM user with stack admin rigths
+    Value: !GetAtt User.Arn
+
+  UserAccessKeyId:
+    Description: Access key id of the IAM user
+    Value: !Ref AccessKey
+
+  UserSecretAccessKey:
+    Description: Secret access key of the IAM user
+    Value: !GetAtt AccessKey.SecretAccessKey
