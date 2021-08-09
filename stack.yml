@@ -9,8 +9,12 @@ Parameters:
       - prod
     Default: test
 
-  Domain:
+  DistributionSubdomain:
     Description: Route53 subdomain for the distribution
+    Type: String
+
+  LoadBalancerSubdomain:
+    Description: Route53 subdomain for the application load balancer
     Type: String
 
   HostedZoneId:
@@ -478,7 +482,7 @@ Resources:
       DistributionConfig:
         Aliases: !If
           - IsProd
-          - [!Ref Domain]
+          - [!Ref DistributionSubdomain]
           - []
         DefaultCacheBehavior:
           AllowedMethods:
@@ -539,17 +543,27 @@ Resources:
             SslSupportMethod: sni-only
           - CloudFrontDefaultCertificate: true
 
-  DistributionRecordSet:
+  DistributionDnsRecord:
     Condition: IsProd
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Domain
-      Type: A
-      AliasTarget:
-        # Below zone id is used for any CloudFront Distribution
-        HostedZoneId: Z2FDTNDATAQYW2
-        DNSName: !GetAtt Distribution.DomainName
+      Name: !Ref DistributionSubdomain
+      Type: CNAME
+      TTL: !Ref DistributionDnsRecordTtl
+      ResourceRecords:
+        - !GetAtt Distribution.DomainName
+
+  LoadBalancerDnsRecord:
+    Condition: IsProd
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref LoadBalancerSubdomain
+      Type: CNAME
+      TTL: !Ref LoadBalancerDnsRecordTtl
+      ResourceRecords:
+        - !GetAtt LoadBalancer.DNSName
 
 Outputs:
   InstancePublicIp:
@@ -565,5 +579,5 @@ Outputs:
     Description: Track distribution domain name
     Value: !If
       - IsProd
-      - !Ref Domain
+      - !Ref DistributionSubdomain
       - !GetAtt Distribution.DomainName
