@@ -441,7 +441,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      Name: !Sub ${AWS::StackName}-load-balancer
+      Name: !Sub ${AWS::StackName}-alb
       Scheme: internet-facing
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
