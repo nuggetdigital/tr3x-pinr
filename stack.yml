@@ -21,11 +21,6 @@ Parameters:
     Description: Id of the subdomain hosted zone for the production account
     Type: String
 
-  CertificateArn:
-    Description: |
-      ARN of an ACM certificate for the prod distribution
-    Type: String
-
   CdnDefaultTtl:
     Description: Default cache object TTL
     Type: Number
@@ -401,7 +396,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       # Certificates:
-      #   - CertificateArn: !Ref CertificateArn
+      #   - CertificateArn: !GetAtt LoadBalancerSubdomainCertificate.Arn
       DefaultActions:
         - FixedResponseConfig:
             StatusCode: 403
@@ -409,7 +404,10 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Protocol: HTTP #HTTPS
       Port: 80 #443
-      # SslPolicy: TODO
+      # below ssl policy only allows TLSv1.2, ECDHE-ECDSA-AES128-GCM-SHA256, 
+      # ECDHE-RSA-AES128-GCM-SHA256, ECDHE-ECDSA-AES256-GCM-SHA384, and
+      # ECDHE-RSA-AES256-GCM-SHA384
+      # SslPolicy: ELBSecurityPolicy-FS-1-2-Res-2020-10
 
   ApiTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -536,12 +534,11 @@ Resources:
                 - - TLSv1.2
                 - !Ref AWS::NoValue
         PriceClass: PriceClass_100
-        ViewerCertificate: !If
-          - IsProd
-          - AcmCertificateArn: !Ref CertificateArn
-            MinimumProtocolVersion: TLSv1.2_2018
-            SslSupportMethod: sni-only
-          - CloudFrontDefaultCertificate: true
+        ViewerCertificate:
+          # AcmCertificateArn: !GetAtt DistributionSubdomainCertificate.Arn
+          # MinimumProtocolVersion: TLSv1.2_2021
+          # SslSupportMethod: sni-only
+          CloudFrontDefaultCertificate: true
 
   DistributionDnsRecord:
     Condition: IsProd
@@ -565,7 +562,25 @@ Resources:
       ResourceRecords:
         - !GetAtt LoadBalancer.DNSName
 
-# TODO: certificates for dist & alb subdomain
+  LoadBalancerSubdomainCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      CertificateTransparencyLoggingPreference: DISABLED
+      DomainName: !Ref LoadBalancerSubdomain
+      DomainValidationOptions:
+        - DomainName: !Ref LoadBalancerSubdomain
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
+
+  DistributionSubdomainCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      CertificateTransparencyLoggingPreference: DISABLED
+      DomainName: !Ref DistributionSubdomain
+      DomainValidationOptions:
+        - DomainName: !Ref DistributionSubdomain
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
 
 Outputs:
   InstancePublicIp:
