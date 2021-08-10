@@ -453,11 +453,10 @@ Resources:
     Properties:
       BucketName: !Sub ${AWS::StackName}-datastore-bucket
 
-  LogsBucket:
-    Condition: IsProd
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-website-bucket-${PseudoRandomness}
+  # LogsBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: !Sub ${AWS::StackName}-website-bucket-${PseudoRandomness}
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -484,10 +483,8 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
-        Aliases: !If
-          - IsProd
-          - [!Ref DistributionSubdomain]
-          - []
+        # Aliases:
+        #   - !Ref DistributionSubdomain
         DefaultCacheBehavior:
           AllowedMethods:
             - GET
@@ -513,32 +510,19 @@ Resources:
         # routing ipv6 traffic from Route53 to CloudFront would require an AAAA
         # alias record which carries along extra cost
         IPV6Enabled: false
-        Logging: !If
-          - IsProd
-          - Bucket: !Sub ${LogsBucket}.s3.amazonaws.com
-            IncludeCookies: false
-            Prefix: ""
-          - !Ref AWS::NoValue
+        # Logging:
+        #   Bucket: !Sub ${LogsBucket}.s3.amazonaws.com
+        #   IncludeCookies: false
+        #   Prefix: ""
         Origins:
           - DomainName: !GetAtt LoadBalancer.DNSName
             Id: !Sub ${LoadBalancer.LoadBalancerName}-origin
             CustomOriginConfig:
-              HTTPPort: !If
-                - IsProd
-                - !Ref AWS::NoValue
-                - 80
-              HTTPSPort: !If
-                - IsProd
-                - 443
-                - !Ref AWS::NoValue
-              OriginProtocolPolicy: !If
-                - IsProd
-                - https-only
-                - http-only
-              OriginSSLProtocols: !If
-                - IsProd
-                - - TLSv1.2
-                - !Ref AWS::NoValue
+              HTTPPort: 80
+              # HTTPSPort: 443
+              OriginProtocolPolicy: http-only #https-only
+              # OriginSSLProtocols:
+              #   - TLSv1.2
         PriceClass: PriceClass_100
         ViewerCertificate:
           # AcmCertificateArn: !GetAtt DistributionSubdomainCertificate.Arn
@@ -546,49 +530,45 @@ Resources:
           # SslSupportMethod: sni-only
           CloudFrontDefaultCertificate: true
 
-  DistributionDnsRecord:
-    Condition: IsProd
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref DistributionSubdomain
-      Type: CNAME
-      TTL: !Ref DistributionDnsRecordTtl
-      ResourceRecords:
-        - !GetAtt Distribution.DomainName
+  # DistributionDnsRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !Ref HostedZoneId
+  #     Name: !Ref DistributionSubdomain
+  #     Type: CNAME
+  #     TTL: !Ref DistributionDnsRecordTtl
+  #     ResourceRecords:
+  #       - !GetAtt Distribution.DomainName
 
-  LoadBalancerDnsRecord:
-    Condition: IsProd
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref LoadBalancerSubdomain
-      Type: CNAME
-      TTL: !Ref LoadBalancerDnsRecordTtl
-      ResourceRecords:
-        - !GetAtt LoadBalancer.DNSName
+  # LoadBalancerDnsRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !Ref HostedZoneId
+  #     Name: !Ref LoadBalancerSubdomain
+  #     Type: CNAME
+  #     TTL: !Ref LoadBalancerDnsRecordTtl
+  #     ResourceRecords:
+  #       - !GetAtt LoadBalancer.DNSName
 
-  LoadBalancerSubdomainCertificate:
-    Condition: IsProd
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      CertificateTransparencyLoggingPreference: DISABLED
-      DomainName: !Ref LoadBalancerSubdomain
-      DomainValidationOptions:
-        - DomainName: !Ref LoadBalancerSubdomain
-          HostedZoneId: !Ref HostedZoneId
-      ValidationMethod: DNS
+  # LoadBalancerSubdomainCertificate:
+  #   Type: AWS::CertificateManager::Certificate
+  #   Properties:
+  #     CertificateTransparencyLoggingPreference: DISABLED
+  #     DomainName: !Ref LoadBalancerSubdomain
+  #     DomainValidationOptions:
+  #       - DomainName: !Ref LoadBalancerSubdomain
+  #         HostedZoneId: !Ref HostedZoneId
+  #     ValidationMethod: DNS
 
-  DistributionSubdomainCertificate:
-    Condition: IsProd
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      CertificateTransparencyLoggingPreference: DISABLED
-      DomainName: !Ref DistributionSubdomain
-      DomainValidationOptions:
-        - DomainName: !Ref DistributionSubdomain
-          HostedZoneId: !Ref HostedZoneId
-      ValidationMethod: DNS
+  # DistributionSubdomainCertificate:
+  #   Type: AWS::CertificateManager::Certificate
+  #   Properties:
+  #     CertificateTransparencyLoggingPreference: DISABLED
+  #     DomainName: !Ref DistributionSubdomain
+  #     DomainValidationOptions:
+  #       - DomainName: !Ref DistributionSubdomain
+  #         HostedZoneId: !Ref HostedZoneId
+  #     ValidationMethod: DNS
 
 Outputs:
   InstancePublicIp:

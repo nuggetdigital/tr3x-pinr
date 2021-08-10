@@ -8,31 +8,36 @@
 saucy serverlite ipfs service stashin a s3 datastore 🌍🌒🛸🪐
 ```
 
-## ops
+## auto ops
 
-check the code to see what is actually happenin, tldr:
+precompilin' [`go-ipfs`](https://github.com/ipfs/go-ipfs) and [`go-ds-s3`](https://github.com/ipfs/go-ds-s3) into a single binary in a [`bundle`](./.github/workflows/bundle.yml) pipeline
+
+`tr3x-pinr` deployments run thru a [pipeline](./.github/workflows/cd.yml) triggered by `git push` on branches `test` and `main`
+
+## manual ops 
+
+*only available to admins*
+
+require below env vars to be set
+
+```bash
+# just example values
+STACK_NAME=tr3x-pinr-test-stack
+SSH_USERNAME=sshusr
+SSH_PRIVATE_KEY_NAME=prikey
+```
+
+`SSH_USERNAME` and `SSH_PRIVATE_KEY_NAME` must be set identical to the corresponding repo secrets' values
 
 ### `./keygen.sh`
 
 generate a fresh ssh key pair and push its public key to ec2
 
-needs to be run before any deployment
-
-`tr3x-pinr` deployments should ideally run through a pipeline triggered by `git push`
-
-consider all below scripts for debugging measures only
-
-### `./deploy.sh`
-
-deploys the stack
+ℹ️ needs to be run before any deployment
 
 ### `./ssh.sh`
 
 sshs into the instance
-
-### `./destroy.sh`
-
-destroys the stack
 
 ## docs
 
