@@ -75,6 +75,14 @@ Parameters:
     AllowedPattern: "^[^ ]{16,}$"
     Type: String
 
+  DistributionDnsRecordTtl:
+    Description: Distribution DNS record TTL
+    Type: Number
+
+  LoadBalancerDnsRecordTtl:
+    Description: Load balancer DNS record TTL
+    Type: Number
+
 Conditions:
   IsProd: !Equals
     - !Ref Environment

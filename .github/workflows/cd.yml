@@ -23,6 +23,8 @@ env:
   DSS3_VERSION: v0.7.0
   PRXY_FROM_PORT: 5000
   PRXY_TO_PORT: 5001
+  DIST_DNS_RECORD_TTL: 2400
+  ALB_DNS_RECORD_TTL: 2400
   # the pipeline further needs the following secrets: AWS_ACCESS_KEY_ID_TEST, 
   # AWS_SECRET_ACCESS_KEY_TEST, AWS_ACCESS_KEY_ID_PROD, 
   # AWS_SECRET_ACCESS_KEY_PROD, SSH_USERNAME, SSH_PRIVATE_KEY_NAME, 
@@ -87,4 +89,6 @@ jobs:
               InstanceType=${{ env.INSTANCE_TYPE }} \
               TrafficPort=${{ env.TRAFFIC_PORT }} \
               PseudoRandomness=${{ env.PSEUDO_RANDOMNESS }} \
+              DistributionDnsRecordTtl=${{ DIST_DNS_RECORD_TTL }} \
+              LoadBalancerDnsRecordTtl=${{ ALB_DNS_RECORD_TTL }} \
             --capabilities CAPABILITY_NAMED_IAM
