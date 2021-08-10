@@ -7,7 +7,7 @@ on:
       - test
 
 env:
-  AWS_DEFAULT_REGION: us-east-1
+  AWS_REGION: us-east-1
   DIST_SUBDOMAIN: TODO
   ALB_SUBDOMAIN: TODO
   CDN_DEFAULT_TTL: 604800
