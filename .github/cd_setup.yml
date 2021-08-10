@@ -20,7 +20,7 @@ Resources:
                   - logs:*
                   - ec2:*
                   - route53:*
-                  - elbv2:*
+                  - elasticloadbalancing:*
                   - acm:*
                 Resource: "*"
 
