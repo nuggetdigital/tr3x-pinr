@@ -383,13 +383,13 @@ Resources:
             /usr/bin/sudo /bin/systemctl start ipfs.service
             /usr/bin/sudo /bin/systemctl start prxy.service
 
-  ApiListenerRule:
+  ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
         - ForwardConfig:
             TargetGroups:
-              - TargetGroupArn: !Ref ApiTargetGroup
+              - TargetGroupArn: !Ref TargetGroup
           Order: 1
           Type: forward
       Conditions:
@@ -397,10 +397,10 @@ Resources:
           PathPatternConfig:
             Values:
               - /*
-      ListenerArn: !Ref ApiListener
+      ListenerArn: !Ref Listener
       Priority: 1
 
-  ApiListener:
+  Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       # Certificates:
@@ -417,7 +417,7 @@ Resources:
       # ECDHE-RSA-AES256-GCM-SHA384
       # SslPolicy: ELBSecurityPolicy-FS-1-2-Res-2020-10
 
-  ApiTargetGroup:
+  TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
@@ -428,7 +428,6 @@ Resources:
       HealthCheckTimeoutSeconds: 59
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 2
-      Name: !Sub ${AWS::StackName}-api-target-group
       Port: !Ref TrafficPort
       Protocol: HTTP
       Targets:
@@ -441,7 +440,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      Name: !Sub ${AWS::StackName}-alb
       Scheme: internet-facing
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
