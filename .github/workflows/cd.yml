@@ -71,7 +71,7 @@ jobs:
           aws cloudformation deploy \
             --stack-name $STACK_NAME \
             --template-file ./stack.yml \
-            --parameters-overrides \
+            --parameter-overrides \
               Environment=${{ env.ENVIRONMENT }} \
               DistributionSubdomain=${{ env.DIST_SUBDOMAIN }} \
               LoadBalancerSubdomain=${{ env.ALB_SUBDOMAIN }} \
