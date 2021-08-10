@@ -89,6 +89,6 @@ jobs:
               InstanceType=${{ env.INSTANCE_TYPE }} \
               TrafficPort=${{ env.TRAFFIC_PORT }} \
               PseudoRandomness=${{ env.PSEUDO_RANDOMNESS }} \
-              DistributionDnsRecordTtl=${{ DIST_DNS_RECORD_TTL }} \
-              LoadBalancerDnsRecordTtl=${{ ALB_DNS_RECORD_TTL }} \
+              DistributionDnsRecordTtl=${{ env.DIST_DNS_RECORD_TTL }} \
+              LoadBalancerDnsRecordTtl=${{ env.ALB_DNS_RECORD_TTL }} \
             --capabilities CAPABILITY_NAMED_IAM
