@@ -10,7 +10,6 @@ env:
   AWS_DEFAULT_REGION: us-east-1
   DIST_SUBDOMAIN: TODO
   ALB_SUBDOMAIN: TODO
-  STACK_NAME: tr3x-pinr
   CDN_DEFAULT_TTL: 604800
   CDN_MAX_TTL: 31536000
   CDN_MIN_TTL: 3600
@@ -24,8 +23,9 @@ env:
   DSS3_VERSION: v0.7.0
   PRXY_FROM_PORT: 5000
   PRXY_TO_PORT: 5001
-  # the pipeline further needs the following secrets: AWS_ACCESS_KEY_ID, 
-  # AWS_SECRET_ACCESS_KEY, SSH_USERNAME, SSH_PRIVATE_KEY_NAME, 
+  # the pipeline further needs the following secrets: AWS_ACCESS_KEY_ID_TEST, 
+  # AWS_SECRET_ACCESS_KEY_TEST, AWS_ACCESS_KEY_ID_PROD, 
+  # AWS_SECRET_ACCESS_KEY_PROD, SSH_USERNAME, SSH_PRIVATE_KEY_NAME, 
   # HOSTED_ZONE_ID_TEST, HOSTED_ZONE_ID_PROD
 
 jobs:
@@ -39,9 +39,11 @@ jobs:
           if [[ ${{ github.ref }} == *main ]]; then
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
             echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_PROD }}" >> $GITHUB_ENV
+            echo "STACK_NAME=tr3x-pinr-stack" >> $GITHUB_ENV
           else
             echo "ENVIRONMENT=test" >> $GITHUB_ENV
             echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_TEST }}" >> $GITHUB_ENV
+            echo "STACK_NAME=tr3x-pinr-test-stack" >> $GITHUB_ENV
           fi
           echo "SSH_PUBLIC_KEY_NAME=${{ secrets.SSH_PRIVATE_KEY_NAME }}.pub" >> $GITHUB_ENV
           echo "IPFS_PATH=/home/${{ secrets.SSH_USER_NAME }}/ipfs" >> $GITHUB_ENV
