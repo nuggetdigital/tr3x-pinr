@@ -563,6 +563,7 @@ Resources:
         - !GetAtt LoadBalancer.DNSName
 
   LoadBalancerSubdomainCertificate:
+    Condition: IsProd
     Type: AWS::CertificateManager::Certificate
     Properties:
       CertificateTransparencyLoggingPreference: DISABLED
@@ -573,6 +574,7 @@ Resources:
       ValidationMethod: DNS
 
   DistributionSubdomainCertificate:
+    Condition: IsProd
     Type: AWS::CertificateManager::Certificate
     Properties:
       CertificateTransparencyLoggingPreference: DISABLED
@@ -588,7 +590,10 @@ Outputs:
     Value: !GetAtt Instance.PublicIp
   LoadBalancerDomainName:
     Description: DNS name of the load balancer
-    Value: !GetAtt LoadBalancer.DNSName
+    Value: !If 
+    - IsProd
+    - !Ref LoadBalancerSubdomain
+    - !GetAtt LoadBalancer.DNSName
   BucketName:
     Description: Datastore bucket name
     Value: !Ref Bucket
