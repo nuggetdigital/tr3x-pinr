@@ -8,8 +8,6 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  DIST_SUBDOMAIN: TODO
-  ALB_SUBDOMAIN: TODO
   CDN_DEFAULT_TTL: 604800
   CDN_MAX_TTL: 31536000
   CDN_MIN_TTL: 3600
@@ -39,26 +37,24 @@ jobs:
       - name: map branch 2 test/prod
         run: |
           if [[ ${{ github.ref }} == *main ]]; then
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-            echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_PROD }}" >> $GITHUB_ENV
-            echo "STACK_NAME=tr3x-pinr-prod" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_PROD }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}" >> $GITHUB_ENV
+            echo ENVIRONMENT=prod >> $GITHUB_ENV
+            echo HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_PROD }} >> $GITHUB_ENV
+            echo DIST_SUBDOMAIN=pinr.tr3x.io >> $GITHUB_ENV
+            echo ALB_SUBDOMAIN=alb.pinr.tr3x.io >> $GITHUB_ENV
+            echo STACK_NAME=tr3x-pinr-prod >> $GITHUB_ENV
+            echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_PROD }} >> $GITHUB_ENV
+            echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }} >> $GITHUB_ENV
           else
-            echo "ENVIRONMENT=test" >> $GITHUB_ENV
-            echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_TEST }}" >> $GITHUB_ENV
-            echo "STACK_NAME=tr3x-pinr-test" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_TEST }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}" >> $GITHUB_ENV
+            echo ENVIRONMENT=test" >> $GITHUB_ENV
+            echo HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID_TEST }} >> $GITHUB_ENV
+            echo DIST_SUBDOMAIN=test.pinr.tr3x.io >> $GITHUB_ENV
+            echo ALB_SUBDOMAIN=alb.test.pinr.tr3x.io >> $GITHUB_ENV
+            echo STACK_NAME=tr3x-pinr-test >> $GITHUB_ENV
+            echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_TEST }} >> $GITHUB_ENV
+            echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }} >> $GITHUB_ENV
           fi
-          echo "SSH_PUBLIC_KEY_NAME=${{ secrets.SSH_PRIVATE_KEY_NAME }}.pub" >> $GITHUB_ENV
-          echo "IPFS_PATH=/home/${{ secrets.SSH_USER_NAME }}/ipfs" >> $GITHUB_ENV
-
-      - uses: aws-actions/configure-aws-credentials@v1.5.9
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          echo SSH_PUBLIC_KEY_NAME=${{ secrets.SSH_PRIVATE_KEY_NAME }}.pub >> $GITHUB_ENV
+          echo IPFS_PATH=/home/${{ secrets.SSH_USER_NAME }}/ipfs >> $GITHUB_ENV
 
       - name: cfn validate stack.yml
         run: |
