@@ -3,11 +3,10 @@
 set -eE
 
 source ./.secret.env
-source ./.env
 
 echo "generating a fresh key pair..."
 
-ssh-keygen -t rsa -m PEM -b 4096 -a 10000 -C $STACK_NAME -f $HOME/.ssh/$SSH_PRIVATE_KEY_NAME
+ssh-keygen -t rsa -m PEM -b 4096 -a 10000 -C $SSH_USERNAME -f $HOME/.ssh/$SSH_PRIVATE_KEY_NAME
 
 echo "pushing the public key to ec2..."
 
