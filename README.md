@@ -12,6 +12,8 @@ saucy serverlite ipfs service stashin a s3 datastore 🌍🌒🛸🪐
 
 precompilin' [`go-ipfs`](https://github.com/ipfs/go-ipfs) and [`go-ds-s3`](https://github.com/ipfs/go-ds-s3) into a single binary in a [`bundle`](./.github/workflows/bundle.yml) pipeline
 
+the `bundle` pipeline gets triggered by push `git` tags, which must start with the desired `go-ipfs` version and an optional suffix appended with a hyphen, fx `v0.8.0`, `v0.8.0-rc`, `v0.8.0-rc-2021-08-27`
+
 `tr3x-pinr` deployments run thru a [pipeline](./.github/workflows/cd.yml) triggered by `git push` on branches `test` and `main`
 
 ## manual ops 

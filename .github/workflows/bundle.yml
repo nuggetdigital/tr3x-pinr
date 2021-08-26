@@ -17,10 +17,8 @@ jobs:
     steps:
       - name: get the current version tag for tr3x-pinr
         run: |
-          part=${GITHUB_REF/refs\/tags\//}
-          pushed_tag=${part%%-*}
-          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
-          echo GO_IPFS_TAG=$pushed_tag >> $GITHUB_ENV
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo GO_IPFS_TAG=${pushed-tag%%-*} >> $GITHUB_ENV
 
       - name: pre release draft
         id: create_release
@@ -53,10 +51,8 @@ jobs:
 
       - name: get the current version tag for tr3x-pinr
         run: |
-          part=${GITHUB_REF/refs\/tags\//}
-          pushed_tag=${part%%-*}
-          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
-          echo GO_IPFS_TAG=$pushed_tag >> $GITHUB_ENV
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo GO_IPFS_TAG=${pushed-tag%%-*} >> $GITHUB_ENV
 
       - name: make sure a correct golang version is installed
         uses: actions/setup-go@v2.1.3
@@ -125,10 +121,8 @@ jobs:
 
       - name: get the current version tag for tr3x-pinr
         run: |
-          part=${GITHUB_REF/refs\/tags\//}
-          pushed_tag=${part%%-*}
-          echo "[DEBUG] GO_IPFS_TAG=$pushed_tag"
-          echo GO_IPFS_TAG=$pushed_tag >> $GITHUB_ENV
+          pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo GO_IPFS_TAG=${pushed-tag%%-*} >> $GITHUB_ENV
 
       - name: make sure a correct rust version is installed
         uses: hecrj/setup-rust-action@v1.3.4
