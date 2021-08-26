@@ -70,11 +70,6 @@ Parameters:
     Description: EC2 traffic port - the port that the tr3x pinr prxy listens on
     Type: Number
 
-  PseudoRandomness:
-    Description: Some pseudo randomness to append to bucket names
-    AllowedPattern: "^[^ ]{16,}$"
-    Type: String
-
   DistributionDnsRecordTtl:
     Description: Distribution DNS record TTL
     Type: Number
@@ -451,12 +446,12 @@ Resources:
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AWS::StackName}-datastore-bucket-${PseudoRandomness}
+      BucketName: !Sub ${AWS::StackName}-datastore-bucket
 
   # LogsBucket:
   #   Type: AWS::S3::Bucket
   #   Properties:
-  #     BucketName: !Sub ${AWS::StackName}-website-bucket-${PseudoRandomness}
+  #     BucketName: !Sub ${AWS::StackName}-website-bucket
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
