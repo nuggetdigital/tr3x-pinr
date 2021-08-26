@@ -51,6 +51,7 @@ jobs:
           fi
           echo SSH_PUBLIC_KEY_NAME=${{ secrets.SSH_PRIVATE_KEY_NAME }}.pub >> $GITHUB_ENV
           echo IPFS_PATH=/home/${{ secrets.SSH_USER_NAME }}/ipfs >> $GITHUB_ENV
+          echo PSEUDO_RANDOMNESS=$(date +%s | sha256sum | head -c16) >> $GITHUB_ENV
 
       - name: cfn validate stack.yml
         run: |
@@ -79,7 +80,7 @@ jobs:
               PrxyBinaryUrl=${{ env.PRXY_BINARY_URL }} \
               InstanceType=${{ env.INSTANCE_TYPE }} \
               TrafficPort=${{ env.TRAFFIC_PORT }} \
-              PseudoRandomness=$(date +%s | sha256sum | head -c16) \
+              PseudoRandomness=${{ env.PSEUDO_RANDOMNESS }} \
               DistributionDnsRecordTtl=${{ env.DIST_DNS_RECORD_TTL }} \
               LoadBalancerDnsRecordTtl=${{ env.ALB_DNS_RECORD_TTL }} \
             --capabilities CAPABILITY_NAMED_IAM
