@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eE
+set -eEu
 
 source ./.secret.env
 
