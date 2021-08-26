@@ -18,6 +18,7 @@ jobs:
       - name: get the current version tag for tr3x-pinr
         run: |
           pushed_tag=${GITHUB_REF/refs\/tags\//}
+          echo PUSHED_TAG=$pushed_tag >> $GITHUB_ENV
           echo GO_IPFS_TAG=${pushed_tag%%-*} >> $GITHUB_ENV
 
       - name: pre release draft
@@ -26,8 +27,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.GO_IPFS_TAG }}
-          release_name: ${{ env.GO_IPFS_TAG }}
+          tag_name: ${{ env.PUSHED_TAG }}
+          release_name: ${{ env.PUSHED_TAG }}
           draft: true
           prerelease: true
 
